@@ -1,3 +1,4 @@
+import { hash } from "bcrypt";
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -52,6 +53,13 @@ const userSchema = new mongoose.Schema({
     }
     
 });
+
+// this function will always run before saving the object 
+userSchema.pre('save', async function (next) {
+    // this condition will become true when user will update something ie avatar 
+    if (!this.isModified('password')) next(); // if password if not modified then just go to the next function 
+    this.password = await hash(this.password, 10); // this hashes the password - hash is from the bcrypt
+})
 
 const User = mongoose.model('User', userSchema);
 

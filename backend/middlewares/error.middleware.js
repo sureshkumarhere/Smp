@@ -26,7 +26,12 @@ import ErrorHandler from "../utils/errorhandler.util.js";
      }
      
 
-
+     const obj = {
+         success: false,
+         message: err.message,
+         error: err.stack,
+     };
+    
     res.status(err.statusCode).json({
         success: false,
         message : err.message,
@@ -34,5 +39,7 @@ import ErrorHandler from "../utils/errorhandler.util.js";
     })
     
 }
+
+
 
 export default errorHandler;
