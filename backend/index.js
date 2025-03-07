@@ -13,6 +13,7 @@ import connectDB from './config/mongodb.config.js';
 import errorMiddleware from './middlewares/error.middleware.js'
 import postRoutes from './routes/Post.routes.js'
 import userRoutes from "./routes/user.routes.js";
+import groupRoutes from './routes/group.routes.js'
 import { singleAvatar } from './middlewares/multer.middleware.js';
 const app = express();
 app.use(cors());
@@ -21,6 +22,7 @@ app.use(cookieParser());
 // app.use(express.urlencoded());
 app.use(errorMiddleware);
 app.use('/post', postRoutes);
+app.use('/group', groupRoutes);
 app.use('/user',singleAvatar ,  userRoutes);
 
 
