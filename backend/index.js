@@ -17,6 +17,7 @@ import { singleAvatar } from './middlewares/multer.middleware.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 // app.use(express.urlencoded());
 app.use(errorMiddleware);
 app.use('/post', postRoutes);

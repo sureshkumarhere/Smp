@@ -7,6 +7,7 @@ import crypto from "crypto";
 import VerificationToken from "../models/VerificationToken.model.js";
 
 
+
 // create a new user and save it to the database 
 const register = async (req, res) => {
     try {
@@ -35,16 +36,16 @@ const register = async (req, res) => {
 };
 
 const login = TryCatch(async (req, res) => {
-    // try {
+ 
 
 
         const { email, password } = req.body;
 
         const user = await User.findOne({ email }).select("+password");// as we had done select = false
-        // console.log(user);
+       
         // in password in userschema but we need it here so
         // compare is in bcrypt - it takes unencrypted , encrypted data and compares it 
-        // console.log(password, " ", user.password);
+        
         const isMatch = await compare(password, user.password); 
         // console.log(isMatch);
         if (!isMatch) {
@@ -52,25 +53,67 @@ const login = TryCatch(async (req, res) => {
         }
 
         sendToken(res, user, 200, `Welcome ${user.name} `);
-    //  }
-    // catch (err) {
-    //     console.log('some error occured in login ');
-    //     res.status(500).json({ message: "Something went wrong", error: err.message });
-    // }
+    
     
 })
 
 
+const logout = TryCatch(async (req, res, next) => {
+    res.cookie("jwtToken", "", {
+        httpOnly: true, 
+        expires: new Date(0),
+        secure: process.env.NODE_ENV === "production",
+        sameSite : "strict", 
+    })
+
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully!",
+    });
+})
+
+const updatePassword = TryCatch(async (req, res, next) => {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+        return next(new ErrorHandler("Both old and new passwords are required!", 400));
+    }
+
+    const user = await User.findById(req.user._id).select("+password"); // Fetch user with password
+
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isMatch = await compare(oldPassword, user.password); // Compare old password
+
+    if (!isMatch) {
+        return next(new ErrorHandler("Incorrect old password", 401));
+    }
+
+    user.password = newPassword;
+   
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Password updated successfully!",
+    });
+});
+
+
 const getMyProfile = (req, res) => {
-    
+
+    const user = req.user;
+    res.status(200).json({
+        user, 
+        success: true , 
+    })
 }
 
 
-// the below 3 functions are for verifying the email id of the user
+// the below 2 functions are for verifying the email id of the user
 // transproter is gitting used in sending the email .
-
-
-
 const sendVerificationEmail = TryCatch(async (req, res ) => {
     
 
@@ -126,4 +169,4 @@ const verifyEmail = TryCatch(async (req, res) => {
 
 
 
-export { register , login , getMyProfile , sendVerificationEmail , verifyEmail};
+export { register , login , getMyProfile ,logout ,  updatePassword , sendVerificationEmail , verifyEmail};
