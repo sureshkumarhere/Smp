@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+// this is getting used in the email verification of the user 
+
 
 const verificationTokenSchema = new mongoose.Schema({
     userId: {

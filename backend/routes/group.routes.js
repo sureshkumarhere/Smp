@@ -1,4 +1,8 @@
 import express from 'express'
+import {addMentor, addStudents, assignGroupsToMentors, getAllMembers, getAllMentors, getAllStudents, updateGroupDetails} from '../controllers/group.controller.js';
+import isAdmin from '../middlewares/isAdmin.middleware.js';
+import isAuthenticated from '../middlewares/isAuthenticated.middleware.js';
+import isMentorOfGroup from '../middlewares/isMentorOfGroup.middleware.js';
 
 const app = express.Router();
 
@@ -10,12 +14,22 @@ const app = express.Router();
 // 4. give all members in the group
 // 5. give all mentors of the group
 // 6. give all students of the group
+
+// can do all the above things by using the schema of group only - using some queries
+
 // 7. remove a participant from the group - only the mentor can do this
 // 8. delete a group
 // 9. update group details - name ( and may be avatar of group in future )
+
+
 // 10. get all groups in which participant is present - we can directly get from user itself - no need to implement it 
 
-app.post('/new' )
-
+app.post('/assigngroups', isAuthenticated , isAdmin ,  assignGroupsToMentors);
+app.post('/updategroupdetails/:groupId', isAuthenticated, isMentorOfGroup, updateGroupDetails);
+app.post('/addmentor/:groupId', isAuthenticated, isMentorOfGroup, addMentor);
+app.post('/addstudents/:groupId', isAuthenticated, isMentorOfGroup, addStudents);
+app.get('/allmembers/:groupId', isAuthenticated, isMentorOfGroup, getAllMembers);
+app.get('/allmentors/:groupId', isAuthenticated, isMentorOfGroup, getAllMentors);
+app.get('/allstudents/:groupId', isAuthenticated, isMentorOfGroup, getAllStudents);
 
 export default app; 

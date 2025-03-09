@@ -15,6 +15,7 @@ import postRoutes from './routes/Post.routes.js'
 import userRoutes from "./routes/user.routes.js";
 import groupRoutes from './routes/group.routes.js'
 import { singleAvatar } from './middlewares/multer.middleware.js';
+import seedUsers from './seeders/user.seeder.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -40,6 +41,8 @@ const server = app.listen(PORT, () => {
   connectDB();
 
   console.log(`listening on port ${PORT} successfully `);
+  // seedUsers(30);    // if you want to add users into your database - every thing is already configured correctly 
+
 })
 
 

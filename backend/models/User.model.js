@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid 8-digit registration number!`
         }
     },
+
     password: {
         type: String,
         required: true,
@@ -50,6 +51,10 @@ const userSchema = new mongoose.Schema({
             type: String, 
             // required: true, 
         }
+    }, 
+    isAdmin: {
+        type: Boolean, 
+        default : false,
     }
     
 });
