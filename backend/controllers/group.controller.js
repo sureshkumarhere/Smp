@@ -3,7 +3,7 @@ import User from "../models/User.model.js";
 import Group from "../models/Group.model.js";
 import ErrorHandler from "../utils/errorhandler.util.js";
 import TryCatch from "../utils/TryCatch.util.js";
-
+import Message from "../models/Message.model.js";
 export const assignGroupsToMentors = TryCatch(async (req, res, next) => {
     // you have a array of resigtration numbers in req
     // so for each registration number find user from the User model
@@ -222,4 +222,42 @@ export const getAllStudents = TryCatch(async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, students });
+});
+export const getGroups = TryCatch(async (req, res, next) => {
+    const user = req.user;  // Retrieved from isAuthenticated middleware
+
+    if (!user) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Find groups where the user is a mentor or a student
+    const studentGroups = await Group.find({
+        _id: { $in: [user.studentInGroup] }
+    });
+    const mentorGroups=await Group.find({
+        _id: {$in: [user.mentorInGroup] }
+    });
+
+    res.status(200).json({
+        success: true,
+        studentGroups,
+        mentorGroups
+    });
+   
+});
+export const getMessage = TryCatch(async (req, res, next) => {    
+        const { groupId } = req.params;
+
+        // Validate group existence
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ success: false, message: "Group not found" });
+        }
+
+        // Retrieve messages belonging to this group
+        const messages = await Message.find({ group: groupId }).populate('sender', 'name email');
+        res.status(200).json({
+            success: true,
+            messages
+        });   
 });

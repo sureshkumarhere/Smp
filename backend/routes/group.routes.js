@@ -1,5 +1,5 @@
 import express from 'express'
-import {addMentor, addStudents, assignGroupsToMentors, getAllMembers, getAllMentors, getAllStudents, updateGroupDetails} from '../controllers/group.controller.js';
+import {getGroups,getMessage,addMentor, addStudents, assignGroupsToMentors, getAllMembers, getAllMentors, getAllStudents, updateGroupDetails} from '../controllers/group.controller.js';
 import isAdmin from '../middlewares/isAdmin.middleware.js';
 import isAuthenticated from '../middlewares/isAuthenticated.middleware.js';
 import isMentorOfGroup from '../middlewares/isMentorOfGroup.middleware.js';
@@ -31,5 +31,6 @@ app.post('/addstudents/:groupId', isAuthenticated, isMentorOfGroup, addStudents)
 app.get('/allmembers/:groupId', isAuthenticated, isMentorOfGroup, getAllMembers);
 app.get('/allmentors/:groupId', isAuthenticated, isMentorOfGroup, getAllMentors);
 app.get('/allstudents/:groupId', isAuthenticated, isMentorOfGroup, getAllStudents);
-
+app.get('/fetchgroups',isAuthenticated,getGroups);
+app.get('/:groupId',isAuthenticated,getMessage);
 export default app; 
