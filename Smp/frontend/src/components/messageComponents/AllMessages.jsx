@@ -15,7 +15,6 @@ const AllMessages = ({ allMessage }) => {
 
 	const [scrollShow, setScrollShow] = useState(true);
 
-	// Scroll to bottom of chat
 	const handleScrollDownChat = () => {
 		if (chatBox.current) {
 			chatBox.current.scrollTo({
