@@ -5,7 +5,7 @@ import {
   removeNewMessageRecieved,
 } from "../redux/slices/myChatSlice";
 import { setNotificationBox } from "../redux/slices/conditionSlice";
-import { MdOutlineClose } from "react-icons/md";
+import { MdOutlineClose, MdOutlineMail } from "react-icons/md";
 import { SimpleDateAndTime } from "../utils/formateDateTime";
 import getChatName from "../utils/getChatName";
 
@@ -23,7 +23,7 @@ const NotificationBox = () => {
         <button
           title="Close"
           onClick={() => dispatch(setNotificationBox(false))}
-          className="absolute top-4 right-4 text-richblack-300 hover:text-pink-300 transition"
+          className="absolute top-4 right-4 text-richblack-300 hover:text-yellow-400 transition"
         >
           <MdOutlineClose size={24} />
         </button>
@@ -49,27 +49,28 @@ const NotificationBox = () => {
             </div>
           ) : (
             newMessageRecieved.map((message) => (
-              <div
-                key={message?._id}
+              <button
+                key={message._id}
                 onClick={() => {
                   dispatch(removeNewMessageRecieved(message));
-                  dispatch(addSelectedChat(message?.chat));
+                  dispatch(addSelectedChat(message.chat));
                   dispatch(setNotificationBox(false));
                 }}
-                className="bg-richblack-700 hover:bg-richblack-600 border border-richblack-600 p-3 rounded-md cursor-pointer transition-all"
+                className="w-full flex items-start gap-3 bg-richblack-700 hover:bg-richblack-600 border border-richblack-600 p-4 rounded-lg transition"
               >
-                <p className="line-clamp-2 text-sm text-richblack-25">
-                  <span className="font-medium text-yellow-50">New message</span>
-                  {message?.chat?.isGroupChat && (
-                    <> in <span className="text-cyan-300">{getChatName(message?.chat, authUserId)}</span></>
-                  )}{" "}
-                  from <span className="text-pink-300">{message?.sender?.firstName}</span>:{" "}
-                  <span className="text-green-400">{message?.message}</span>
-                </p>
-                <p className="text-xs text-richblack-400 mt-1">
-                  {SimpleDateAndTime(message?.createdAt)}
-                </p>
-              </div>
+                <MdOutlineMail size={20} className="text-yellow-400 mt-1" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm text-richblack-25">
+                    <span className="font-semibold text-yellow-300">New message</span>
+                    {message.chat.isGroupChat && (
+                      <> in <span className="text-cyan-300">{getChatName(message.chat, authUserId)}</span></>
+                    )}{" "}from <span className="font-medium text-yellow-300">{message.sender.firstName}</span>: <span className="text-green-400">{message.message}</span>
+                  </p>
+                  <p className="text-xs text-richblack-400 mt-2 text-right">
+                    {SimpleDateAndTime(message.createdAt)}
+                  </p>
+                </div>
+              </button>
             ))
           )}
         </div>

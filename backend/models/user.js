@@ -27,8 +27,16 @@ const userSchema = new mongoose.Schema(
 		}, 
 		image: {
 			type: String,
-			default:
-				"https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+			default: function () {
+				// generate an initials avatar using Dicebear
+				const seed = `${this.firstName} ${this.lastName}`;
+				return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}`;
+			},
+		},
+		accountType: {
+			type: String,
+			enum: ["student", "mentor", "admin"],
+			default: "student",
 		},
 	},
 	{

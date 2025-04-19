@@ -1,70 +1,214 @@
-import React from "react";
+import React, { useState } from "react";
 import { MdOutlineClose } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { setProfileDetail } from "../redux/slices/conditionSlice";
+import { setProfileDetail, setLoading } from "../redux/slices/conditionSlice";
 import { toast } from "react-toastify";
+import { PiUserCircleLight } from "react-icons/pi";
+import { FaLock, FaUser, FaEnvelope, FaIdBadge, FaUserShield } from "react-icons/fa";
+import { PiEye, PiEyeClosedLight } from "react-icons/pi";
 
 const ProfileDetail = () => {
   const dispatch = useDispatch();
   const user = useSelector((store) => store.auth);
+  const [showReset, setShowReset] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
   const handleUpdate = () => {
     toast.warn("Coming soon");
   };
 
+  const handleResetPassword = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("All fields are required");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    dispatch(setLoading(true));
+    const token = localStorage.getItem("token");
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.message === "success") {
+          toast.success("Password changed successfully");
+          setShowReset(false);
+          setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+        } else {
+          toast.error(json.message);
+        }
+      })
+      .catch((err) => toast.error(err.message))
+      .finally(() => dispatch(setLoading(false)));
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div className="w-full max-w-lg rounded-lg border border-richblack-600 bg-richblack-800 text-richblack-5 px-6 py-8 relative shadow-lg">
-        {/* Close Button */}
-        <button
-          onClick={() => dispatch(setProfileDetail())}
-          className="absolute top-4 right-4 text-richblack-300 hover:text-pink-300 transition"
-          title="Close"
-        >
-          <MdOutlineClose size={24} />
-        </button>
+      {!showReset ? (
+        <div className="w-full max-w-2xl md:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-tr from-richblack-800 to-richblack-700 border border-richblack-600 rounded-2xl p-8 md:p-10 relative shadow-2xl">
+          {/* Close Button */}
+          <button
+            onClick={() => dispatch(setProfileDetail())}
+            className="absolute top-4 right-4 text-richblack-300 hover:text-pink-300 transition"
+            title="Close"
+          >
+            <MdOutlineClose size={24} />
+          </button>
 
-        {/* Title */}
-        <h2 className="text-3xl font-semibold text-center text-yellow-50 mb-6">Your Profile</h2>
+          {/* Title */}
+          <h2 className="flex items-center justify-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200 mb-6 gap-2">
+            <PiUserCircleLight size={28} /> Your Profile
+          </h2>
 
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          {/* Image */}
-          <img
-            src={user.image}
-            alt="user profile"
-            className="w-24 h-24 rounded-full object-cover border border-richblack-600"
-          />
+          <div className="flex flex-col sm:flex-row items-start gap-8">
+            {/* Image */}
+            <img
+              src={user.image}
+              alt="user profile"
+              className="w-28 h-28 rounded-full object-cover border-4 border-yellow-400"
+            />
 
-          {/* Info */}
-          <div className="flex flex-col gap-2 text-sm sm:text-base w-full">
-            <p className="text-richblack-100">
-              <span className="font-medium text-richblack-200">Name:</span> {user.firstName} {user.lastName}
-            </p>
-            <p className="text-richblack-100">
-              <span className="font-medium text-richblack-200">Email:</span> {user.email}
-            </p>
-
-            {/* Actions */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleUpdate}
-                className="bg-yellow-50 hover:bg-yellow-100 text-black font-semibold py-2 px-4 rounded-md transition"
-              >
-                Update
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  window.location.reload();
-                }}
-                className="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-md transition"
-              >
-                Logout
-              </button>
+            {/* Info & Actions Panel */}
+            <div className="flex-1 mt-6 text-white flex flex-col">
+              {/* User Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-richblack-700 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <FaUser className="mt-1 text-yellow-400" />
+                  <div>
+                    <p className="text-sm text-richblack-200">Full Name</p>
+                    <p className="font-medium text-white">{user.firstName} {user.lastName}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaEnvelope className="mt-1 text-yellow-400" />
+                  <div>
+                    <p className="text-sm text-richblack-200">Email Address</p>
+                    <p className="font-medium text-white">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaIdBadge className="mt-1 text-yellow-400" />
+                  <div>
+                    <p className="text-sm text-richblack-200">Registration No.</p>
+                    <p className="font-medium text-white">{user.regNo}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaUserShield className="mt-1 text-yellow-400" />
+                  <div>
+                    <p className="text-sm text-richblack-200">Account Type</p>
+                    <p className="font-medium text-white">{user.accountType.charAt(0).toUpperCase() + user.accountType.slice(1)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Actions */}
+              <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
+                <button
+                  onClick={handleUpdate}
+                  className="w-full sm:w-auto py-3 px-8 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-300 text-black font-semibold shadow-lg hover:from-yellow-500 hover:to-yellow-400 transition"
+                >
+                  Update Profile
+                </button>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowReset(true)}
+                  className="text-yellow-300 hover:text-yellow-200 underline transition"
+                >
+                  Reset Password
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-full max-w-md bg-richblack-800 border border-richblack-600 rounded-2xl p-8 relative shadow-xl">
+          <h2 className="text-2xl font-bold text-yellow-400 text-center mb-6">Reset Password</h2>
+          <div className="space-y-4">
+            {/* Current Password */}
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
+              <input
+                type={showCurrentPwd ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="h-12 w-full pl-10 pr-12 bg-richblack-700 border border-richblack-600 rounded-xl text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
+                placeholder="Current Password"
+              />
+              <span
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-richblack-300 hover:text-white transition"
+                onClick={() => setShowCurrentPwd((v) => !v)}
+                title={showCurrentPwd ? "Hide" : "Show"}
+              >
+                {showCurrentPwd ? <PiEyeClosedLight size={20} /> : <PiEye size={20} />}
+              </span>
+            </div>
+            {/* New Password */}
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
+              <input
+                type={showNewPwd ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="h-12 w-full pl-10 pr-12 bg-richblack-700 border border-richblack-600 rounded-xl text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
+                placeholder="New Password"
+              />
+              <span
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-richblack-300 hover:text-white transition"
+                onClick={() => setShowNewPwd((v) => !v)}
+                title={showNewPwd ? "Hide" : "Show"}
+              >
+                {showNewPwd ? <PiEyeClosedLight size={20} /> : <PiEye size={20} />}
+              </span>
+            </div>
+            {/* Confirm Password */}
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
+              <input
+                type={showConfirmPwd ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-12 w-full pl-10 pr-12 bg-richblack-700 border border-richblack-600 rounded-xl text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
+                placeholder="Confirm Password"
+              />
+              <span
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-richblack-300 hover:text-white transition"
+                onClick={() => setShowConfirmPwd((v) => !v)}
+                title={showConfirmPwd ? "Hide" : "Show"}
+              >
+                {showConfirmPwd ? <PiEyeClosedLight size={20} /> : <PiEye size={20} />}
+              </span>
+            </div>
+          </div>
+          <div className="mt-6 flex gap-4">
+            <button
+              onClick={handleResetPassword}
+              className="flex-1 py-2 px-4 rounded-full bg-yellow-400 text-black font-semibold hover:bg-yellow-300 transition"
+            >
+              Change Password
+            </button>
+            <button
+              onClick={() => setShowReset(false)}
+              className="flex-1 py-2 px-4 rounded-full bg-richblack-600 text-white font-semibold hover:bg-richblack-700 transition"
+            >
+              Back to Profile
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
