@@ -58,7 +58,7 @@ const AllMessages = ({ allMessage }) => {
 			)}
 
 			<div
-				className="flex flex-col w-full px-3 gap-1 py-2 overflow-y-auto overflow-hidden scroll-style h-[66vh]"
+				className="flex flex-col w-full px-3 py-1 space-y-1 overflow-y-auto scroll-style h-[60vh]"
 				ref={chatBox}
 			>
 				{allMessage?.map((message, idx) => {
@@ -83,56 +83,30 @@ const AllMessages = ({ allMessage }) => {
 								</div>
 							)}
 
-							<div
-								className={`flex items-start gap-1 ${
-									isMyMessage
-										? "flex-row-reverse text-white"
-										: "flex-row text-black"
+							<div className={`flex items-start ${isMyMessage ? 'justify-end' : 'justify-start'} gap-2`}>
+								{/* Avatar (group only) */}
+								{isGroup && !isMyMessage && (
+									<img src={message.sender.image} alt="avatar" className="h-8 w-8 rounded-full" />
+								)}
+								<div className={`relative max-w-[75%] p-2 pb-6 min-w-[6rem] flex flex-col ${
+									isMyMessage ? 'bg-yellow-200 text-black rounded-tl-lg rounded-bl-lg rounded-br-lg' :
+												'bg-richblack-700 text-white rounded-tr-lg rounded-br-lg rounded-bl-lg'
 								}`}
-							>
-								{showAvatar ? (
-									<img
-										src={message?.sender?.image}
-										alt="avatar"
-										className="h-9 w-9 rounded-full"
-									/>
-								) : isGroup && !isMyMessage ? (
-									<div className="h-9 w-9" />
-								) : null}
-
-								<div
-									className={`${
-										isMyMessage
-											? "bg-gradient-to-tr to-slate-800 from-green-400 rounded-s-lg rounded-ee-2xl"
-											: "bg-gradient-to-tr to-slate-800 from-white rounded-e-lg rounded-es-2xl"
-									} py-1.5 px-2 min-w-10 text-start flex flex-col relative max-w-[85%]`}
 								>
 									{isGroup && !isMyMessage && (
-										<span className="text-xs font-bold text-start text-green-900">
-											{message?.sender?.firstName}
+										<span className="text-xs font-semibold text-yellow-400 mb-1">
+											{message.sender.firstName}
 										</span>
 									)}
-
-									<div
-										className={`mt-1 pb-1.5 ${
-											isMyMessage ? "pr-16" : "pr-12"
-										}`}
-									>
-										<span>{message?.message}</span>
-										<span
-											className="text-[11px] font-light absolute bottom-1 right-2 flex items-end gap-1.5"
-											title={SimpleDateAndTime(message?.updatedAt)}
-										>
-											{SimpleTime(message?.updatedAt)}
-											{isMyMessage && (
-												<VscCheckAll
-													color="white"
-													fontSize={14}
-												/>
-											)}
-										</span>
-									</div>
+									<span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>{message.message}</span>
+									<span className="absolute bottom-1 right-2 flex items-center text-[10px] text-richblack-400 gap-1">
+										{SimpleTime(message.updatedAt)}
+										{isMyMessage && <VscCheckAll fontSize={16} />}
+									</span>
 								</div>
+								{isGroup && isMyMessage && (
+									<img src={message.sender.image} alt="avatar" className="h-8 w-8 rounded-full" />
+								)}
 							</div>
 						</Fragment>
 					);

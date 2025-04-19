@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaTimes, FaArrowLeft } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
 	setChatLoading,
@@ -9,7 +9,6 @@ import {
 import { toast } from "react-toastify";
 import ChatShimmer from "../loading/ChatShimmer";
 import { addSelectedChat } from "../../redux/slices/myChatSlice";
-import { SimpleDateAndTime } from "../../utils/formateDateTime";
 import socket from "../../socket/socket";
 
 const UserSearch = () => {
@@ -47,12 +46,12 @@ const UserSearch = () => {
 
 	useEffect(() => {
 		setSelectedUsers(
-			users.filter((user) =>
-				[`${user.firstName} ${user.lastName}`, user.email]
-					.join(" ")
+			users.filter((user) => {
+				const searchable = `${user.firstName} ${user.lastName} ${user.email} ${user.regNo}`;
+				return searchable
 					.toLowerCase()
-					.includes(inputUserName?.toLowerCase())
-			)
+					.includes(inputUserName.toLowerCase());
+			})
 		);
 	}, [inputUserName]);
 
@@ -72,7 +71,6 @@ const UserSearch = () => {
 			.then((json) => {
 				dispatch(addSelectedChat(json?.data));
 				socket.emit("chat created", json?.data, authUserId);
-				toast.success("Chat created!");
 				dispatch(setLoading(false));
 				dispatch(setUserSearchBox());
 			})
@@ -86,24 +84,32 @@ const UserSearch = () => {
 	return (
 		<>
 			{/* Header */}
-			<div className="p-4 w-full h-[7vh] flex justify-between items-center bg-richblack-800 text-yellow-50 font-semibold border-b border-richblack-600">
-				<h1 className="text-lg">New Chat</h1>
-				<div className="w-2/3 flex items-center gap-2">
+			<div className="relative p-4 w-full h-[7vh] flex items-center bg-richblack-900 text-yellow-400 font-semibold border-b border-richblack-600 shadow">
+				{/* Back Button */}
+				<button
+					onClick={() => dispatch(setUserSearchBox())}
+					className="p-2 rounded-full hover:bg-richblack-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+					title="Back"
+				>
+					<FaArrowLeft size={20} className="text-white" />
+				</button>
+			</div>
+			{/* Search Input Row */}
+			<div className="px-4 py-3 bg-richblack-900 border-b border-richblack-600">
+				<div className="relative w-full max-w-md mx-auto">
+					<FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-richblack-400" />
 					<input
 						id="search"
 						type="text"
 						placeholder="Search users..."
-						className="w-full bg-richblack-700 text-white px-3 py-1.5 border border-richblack-600 rounded-md outline-none placeholder:text-richblack-300 focus:border-yellow-50 transition"
+						className="w-full bg-richblack-700 text-richblack-5 placeholder:text-richblack-400 pl-12 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						onChange={(e) => setInputUserName(e.target.value)}
 					/>
-					<label htmlFor="search" className="text-yellow-50 cursor-pointer">
-						<FaSearch />
-					</label>
 				</div>
 			</div>
 
 			{/* User List */}
-			<div className="flex flex-col w-full px-4 gap-2 py-2 overflow-y-auto scroll-style h-[73vh]">
+			<div className="flex flex-col w-full px-4 py-3 space-y-3 overflow-y-auto scroll-style h-[73vh]">
 				{selectedUsers.length === 0 && isChatLoading ? (
 					<ChatShimmer />
 				) : selectedUsers.length === 0 ? (
@@ -112,25 +118,25 @@ const UserSearch = () => {
 					</div>
 				) : (
 					selectedUsers.map((user) => (
-						<div
+						<button
 							key={user._id}
 							onClick={() => handleCreateChat(user._id)}
-							className="w-full flex items-center gap-3 p-3 border border-richblack-600 rounded-lg cursor-pointer transition-all bg-richblack-700 text-white hover:bg-richblack-600"
+							className="w-full flex items-center gap-3 p-4 border border-richblack-600 rounded-lg bg-richblack-700 text-white hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						>
 							<img
 								src={user?.image}
 								alt="user"
-								className="h-12 w-12 rounded-full object-cover"
+								className="h-12 w-12 rounded-full object-cover border-2 border-transparent"
 							/>
 							<div className="flex-1">
-								<div className="font-semibold capitalize truncate">
+								<div className="font-semibold text-lg capitalize truncate">
 									{user?.firstName} {user?.lastName}
 								</div>
-								<div className="text-xs font-light text-richblack-300">
-									{SimpleDateAndTime(user?.createdAt)}
+								<div className="text-sm text-richblack-300">
+									Reg No: {user.regNo} | Role: {user.accountType.charAt(0).toUpperCase() + user.accountType.slice(1)}
 								</div>
 							</div>
-						</div>
+						</button>
 					))
 				)}
 			</div>

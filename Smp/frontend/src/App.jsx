@@ -10,8 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Components
 import Header from "./components/Header";
-import Footer from "./components/Footer";
-import ProfileDetail from "./components/ProfileDetail";
+import Sidebar from "./components/Sidebar";
 import GroupChatBox from "./components/chatComponents/GroupChatBox";
 import NotificationBox from "./components/NotificationBox";
 import Loading from "./components/loading/Loading";
@@ -21,6 +20,7 @@ import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Error from "./pages/Error";
+import MyProfile from "./pages/MyProfile";
 
 // Redux Store
 import store from "./redux/store";
@@ -29,7 +29,6 @@ const AppLayout = () => {
   const [toastPosition, setToastPosition] = useState("bottom-left");
 
   const {
-    isProfileDetail,
     isGroupChatBox,
     isNotificationBox,
     isLoading,
@@ -67,12 +66,11 @@ const AppLayout = () => {
       <div className="h-16 md:h-20" />
       <main className="min-h-[85vh] p-2 sm:p-4">
         <Outlet />
-        {isProfileDetail && <ProfileDetail />}
         {isGroupChatBox && <GroupChatBox />}
         {isNotificationBox && <NotificationBox />}
       </main>
       {isLoading && <Loading />}
-      <Footer />
+      <Sidebar />
     </div>
   );
 };
@@ -84,9 +82,10 @@ const routers = createBrowserRouter([
     element: <AppLayout />,
     errorElement: <Error />,
     children: [
-      { path: "/", element: <Home /> },
-      { path: "/signup", element: <SignUp /> },
-      { path: "/signin", element: <SignIn /> },
+      { index: true, element: <Home /> },
+      { path: "profile", element: <MyProfile /> },
+      { path: "signup", element: <SignUp /> },
+      { path: "signin", element: <SignIn /> },
       { path: "*", element: <Error /> },
     ],
   },

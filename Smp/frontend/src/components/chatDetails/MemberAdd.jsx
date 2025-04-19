@@ -98,29 +98,28 @@ const MemberAdd = ({ setMemberAddBox }) => {
 	};
 
 	return (
-		<div className="relative p-4 text-yellow-50 bg-richblack-900 rounded-md overflow-auto h-full scroll-style">
+		<div className="relative p-6 text-white bg-richblack-800 rounded-lg shadow-inner overflow-auto h-full scroll-style">
 			<h2 className="text-lg font-semibold text-center mb-4">Add Member</h2>
 
 			{/* Back Button */}
-			<div
+			<button
 				onClick={() => setMemberAddBox(false)}
-				className="bg-black/20 hover:bg-black/50 h-8 w-8 rounded-md flex items-center justify-center absolute top-4 left-4 cursor-pointer"
+				className="absolute top-4 left-4 p-2 bg-richblack-700 rounded-full hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+				title="Back"
 			>
-				<FaArrowLeft fontSize={14} />
-			</div>
+				<FaArrowLeft size={18} className="text-white" />
+			</button>
 
 			{/* Search */}
-			<div className="flex items-center gap-2 mb-4 justify-center">
+			<div className="relative mb-6">
+				<FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" title="Search Users" />
 				<input
 					id="search"
 					type="text"
 					placeholder="Search users..."
-					className="w-2/3 border border-richblack-600 py-1 px-3 rounded-md outline-none bg-transparent placeholder:text-sm"
+					className="w-full bg-richblack-700 text-white placeholder:text-richblack-400 pl-10 pr-4 py-2 rounded-full border border-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 					onChange={(e) => setInputUserName(e.target.value)}
 				/>
-				<label htmlFor="search" className="cursor-pointer">
-					<FaSearch title="Search Users" />
-				</label>
 			</div>
 
 			{/* User List */}
@@ -129,52 +128,46 @@ const MemberAdd = ({ setMemberAddBox }) => {
 			) : selectedUsers.length === 0 ? (
 				<div className="text-center text-sm text-richblack-200">No users found</div>
 			) : (
-				<div className="flex flex-col gap-2">
+				<div className="flex flex-col space-y-2 max-h-[40vh] overflow-auto scroll-style">
 					{selectedUsers.map((user) => (
-						<div
+						<button
 							key={user._id}
-							className="w-full border border-richblack-600 rounded-lg p-2 flex items-center gap-3 hover:bg-richblack-800 transition-all cursor-pointer"
+							onClick={() => handleAddUser(user._id, user.firstName)}
+							className="w-full flex items-center gap-3 p-4 bg-richblack-700 border border-richblack-600 rounded-lg text-white hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						>
 							<img
-								className="h-10 w-10 rounded-full object-cover"
+								className="h-10 w-10 rounded-full object-cover border-2 border-transparent"
 								src={user.image}
-								alt="img"
+								alt={`${user.firstName} ${user.lastName}`}
 							/>
 							<div className="flex-1 capitalize truncate">
 								{user.firstName} {user.lastName}
 							</div>
-							<div
-								title="Add User"
-								className="border border-richblack-600 p-2 rounded-md hover:bg-richblack-700 transition-all"
-								onClick={() => handleAddUser(user._id, user.firstName)}
-							>
-								<IoPersonAddOutline />
-							</div>
-						</div>
+							<IoPersonAddOutline size={20} className="text-yellow-400" title="Add Member" />
+						</button>
 					))}
 				</div>
 			)}
 
 			{/* Confirmation Modal */}
 			{addUserName && (
-				<div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center animate-fadeIn">
-					<div className="bg-richblack-800 border border-richblack-600 rounded-lg p-6 w-[90%] max-w-sm shadow-xl">
-						<h2 className="text-lg font-semibold mb-4 text-center text-yellow-50">
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+					<div className="bg-richblack-800 border border-yellow-400 rounded-lg p-6 w-full max-w-xs shadow-xl">
+						<h2 className="text-lg font-bold mb-4 text-center text-white">
 							Add '{addUserName}' to group?
 						</h2>
 						<div className="flex justify-center gap-4">
 							<button
-								onClick={() => {
-									setAddUserName("");
-									setAddUserId("");
-								}}
-								className="px-4 py-2 border border-richblack-600 rounded-md hover:bg-richblack-700 transition-all"
+								onClick={() => { setAddUserName(''); setAddUserId(''); }}
+								className="flex-1 py-2 px-4 rounded-full bg-richblack-700 text-white border border-richblack-600 hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+								title="Cancel"
 							>
 								Cancel
 							</button>
 							<button
 								onClick={handleAddUserCall}
-								className="px-4 py-2 bg-yellow-50 text-richblack-900 font-semibold rounded-md hover:bg-yellow-100 transition-all"
+								className="flex-1 py-2 px-4 bg-yellow-400 text-black font-semibold rounded-full hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+								title="Confirm Add Member"
 							>
 								Confirm
 							</button>

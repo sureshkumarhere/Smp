@@ -113,13 +113,13 @@ const MessageBox = ({ chatId }) => {
 			{/* Chat Details Box */}
 			{isChatDetailsBox && (
 				<div
-					className={`h-[60vh] w-full max-w-96 absolute top-0 left-0 z-20 p-1 ${
+					className={`fixed inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 ${
 						isExiting ? "box-exit" : "box-enter"
 					}`}
 				>
 					<div
 						ref={chatDetailsBox}
-						className="flex border border-slate-400 bg-slate-800 overflow-hidden rounded-lg"
+						className="w-full max-w-4xl max-h-[90vh] bg-richblack-800 rounded-2xl shadow-2xl overflow-hidden flex"
 					>
 						<ChatDetailsBox />
 					</div>

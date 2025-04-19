@@ -58,20 +58,24 @@ const getChat = async (req, res) => {
 	return res.status(200).json({ data: chat });
 };
 const createGroup = async (req, res) => {
+	if (req.user.accountType !== 'mentor') {
+		return res.status(403).json({ message: "Only mentors can create groups" });
+	}
 	if (!req.body.users || !req.body.name) {
 		return res.status(200).json({ message: "users and name not provide" });
 	}
 	const users = req.body.users;
-	if (users.length < 2) {
-		return res
-			.status(200)
-			.json({ message: "min 2 users required for group" });
+	const studentIds = users
+		.filter((u) => u.accountType === 'student')
+		.map((u) => u._id);
+	if (studentIds.length < 2) {
+		return res.status(400).json({ message: "Select at least two students for group" });
 	}
-	users.push(req.user._id);
+	studentIds.push(req.user._id);
 	const groupChat = await Chat.create({
 		chatName: req.body.name,
 		isGroupChat: true,
-		users: users,
+		users: studentIds,
 		groupAdmin: req.user._id,
 	});
 	const groups = await Chat.findOne({ _id: groupChat._id })

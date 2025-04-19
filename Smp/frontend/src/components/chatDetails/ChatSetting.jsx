@@ -11,6 +11,7 @@ import {
 import { addAllMessages } from "../../redux/slices/messageSlice";
 import { deleteSelectedChat } from "../../redux/slices/myChatSlice";
 import socket from "../../socket/socket";
+import { MdOutlineClearAll, MdDeleteForever } from 'react-icons/md';
 
 const ChatSetting = () => {
 	const dispatch = useDispatch();
@@ -115,80 +116,65 @@ const ChatSetting = () => {
 	};
 
 	return (
-		<div className="flex flex-col p-4 gap-4 text-yellow-50 bg-richblack-900 rounded-md overflow-auto scroll-style h-full">
-			<h1 className="font-semibold text-lg text-center">Settings</h1>
+		<div className="flex flex-col h-full bg-richblack-800 rounded-lg shadow-md overflow-auto p-6">
+			{/* Header */}
+			<h1 className="text-xl font-bold text-yellow-400 text-center mb-6">Settings</h1>
 
 			{/* Clear Chat */}
-			<div
+			<button
 				onClick={handleClearChat}
-				className="w-full px-4 py-2 border border-richblack-600 rounded-lg flex justify-between items-center cursor-pointer transition-all hover:bg-richblack-700"
+				className="flex items-center justify-between w-full p-4 bg-richblack-700 border border-richblack-600 rounded-lg hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition mb-4"
+				title={selectedChat?.isGroupChat ? 'Admin only' : 'Clear Chat'}
 			>
 				<span>Clear Chat</span>
-				<CiCircleInfo
-					fontSize={18}
-					title={
-						selectedChat?.isGroupChat
-							? "Admin access only"
-							: "Clear Chat"
-					}
-				/>
-			</div>
+				<MdOutlineClearAll size={20} className="text-yellow-400" />
+			</button>
 
 			{/* Delete Option */}
 			{selectedChat?.isGroupChat ? (
-				<div
+				<button
 					onClick={handleDeleteGroup}
-					className="w-full px-4 py-2 border border-richblack-600 rounded-lg flex justify-between items-center cursor-pointer transition-all hover:bg-richblack-700"
+					className="flex items-center justify-between w-full p-4 bg-richblack-700 border border-richblack-600 rounded-lg hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition"
+					title="Admin only"
 				>
 					<span>Delete Group</span>
-					<CiCircleInfo fontSize={18} title="Admin access only" />
-				</div>
+					<MdDeleteForever size={20} className="text-red-400" />
+				</button>
 			) : (
-				<div
+				<button
 					onClick={handleDeleteChat}
-					className="w-full px-4 py-2 border border-richblack-600 rounded-lg flex justify-between items-center cursor-pointer transition-all hover:bg-richblack-700"
+					className="flex items-center justify-between w-full p-4 bg-richblack-700 border border-richblack-600 rounded-lg hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition"
+					title="Delete Chat"
 				>
 					<span>Delete Chat</span>
-					<CiCircleInfo fontSize={18} title="Delete Chat" />
-				</div>
+					<MdDeleteForever size={20} className="text-red-400" />
+				</button>
 			)}
 
 			{/* Confirmation UI */}
 			{isConfirm && (
-				<div className="fixed bottom-2 right-2 w-[calc(100%-1rem)] sm:w-[380px] bg-richblack-800 border border-richblack-600 p-4 rounded-lg shadow-lg z-20">
-					<div
-						className={`flex justify-between items-center ${
-							isConfirm === "clear-chat"
-								? "text-blue-200"
-								: "text-red-300"
-						}`}
-					>
-						<span className="text-sm font-semibold">
-							{isConfirm === "clear-chat"
-								? "Clear chat confirmation?"
-								: isConfirm === "delete-group"
-								? "Delete group confirmation?"
-								: "Delete chat confirmation?"}
-						</span>
-						<div className="flex gap-3">
-							<button
-								onClick={() => setConfirm("")}
-								className="border border-richblack-600 p-1.5 rounded-md hover:bg-richblack-700"
-								title="Cancel"
-							>
-								<VscError fontSize={18} />
-							</button>
-							<button
-								onClick={
-									isConfirm === "clear-chat"
-										? handleClearChatCall
-										: handleDeleteChatCall
-								}
-								className="border border-richblack-600 p-1.5 rounded-md hover:bg-richblack-700"
-								title="Confirm"
-							>
-								<IoCheckmarkCircleOutline fontSize={18} />
-							</button>
+				<div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+					<div className="bg-richblack-800 border border-red-600 rounded-lg p-6 w-full max-w-xs shadow-xl">
+						<div className="flex flex-col items-center gap-4 text-white">
+							<span className="font-semibold text-lg">
+								{isConfirm === 'clear-chat' ? 'Confirm Clear Chat?' : isConfirm === 'delete-group' ? 'Confirm Delete Group?' : 'Confirm Delete Chat?'}
+							</span>
+							<div className="flex gap-4 w-full">
+								<button
+									onClick={() => setConfirm('')}
+									className="flex-1 py-2 px-4 rounded-full bg-richblack-700 text-white hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition"
+									title="Cancel"
+								>
+									<VscError size={20} />
+								</button>
+								<button
+									onClick={isConfirm === 'clear-chat' ? handleClearChatCall : handleDeleteChatCall}
+									className="flex-1 py-2 px-4 rounded-full bg-red-600 text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400 transition"
+									title="Confirm"
+								>
+									<IoCheckmarkCircleOutline size={20} />
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>

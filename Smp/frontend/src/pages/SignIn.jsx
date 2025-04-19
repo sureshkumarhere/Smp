@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { addAuth } from "../redux/slices/authSlice";
 import { checkValidSignInFrom } from "../utils/validate";
 import { PiEye, PiEyeClosedLight } from "react-icons/pi";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -60,28 +61,29 @@ const SignIn = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 bg-richblack-900 text-richblack-5">
+    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 bg-gradient-to-br from-richblack-900 to-richblack-800">
       <div className="w-full max-w-md bg-richblack-800 border border-richblack-600 rounded-lg p-6 shadow-md">
-        <h2 className="text-3xl font-semibold text-center text-yellow-50 mb-6">
+        <h2 className="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200 mb-8">
           Sign In
         </h2>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-6">
           {/* Email */}
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <label
               htmlFor="email"
               className="mb-1 text-sm font-medium text-richblack-200"
             >
               Email Address
             </label>
+            <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
             <input
               type="email"
               id="email"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="px-4 py-3 rounded-lg bg-richblack-700 border border-richblack-600 text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-200"
+              className="h-12 pl-10 px-4 rounded-xl bg-richblack-700 border border-richblack-600 text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
             />
           </div>
 
@@ -93,18 +95,20 @@ const SignIn = () => {
             >
               Password
             </label>
+            <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
             <input
               type={isShow ? "text" : "password"}
               id="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="px-4 py-3 rounded-lg bg-richblack-700 border border-richblack-600 text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-200"
+              className="h-12 pl-10 pr-12 px-4 rounded-xl bg-richblack-700 border border-richblack-600 text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"
             />
             {password && (
               <span
-                className="absolute right-4 top-10 cursor-pointer text-richblack-300 hover:text-white transition"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-richblack-300 hover:text-white transition"
                 onClick={() => setIsShow(!isShow)}
+                title={isShow ? "Hide Password" : "Show Password"}
               >
                 {isShow ? <PiEyeClosedLight size={20} /> : <PiEye size={20} />}
               </span>
@@ -115,16 +119,13 @@ const SignIn = () => {
           <button
             type="submit"
             disabled={load !== ""}
-            className="w-full py-3 text-lg font-semibold rounded-lg bg-yellow-300 text-black hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 text-lg font-semibold rounded-full bg-gradient-to-r from-yellow-400 to-yellow-200 text-richblack-900 hover:from-yellow-300 hover:to-yellow-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {load || "Sign In"}
           </button>
 
           {/* Links */}
-          <div className="flex justify-between text-sm text-richblack-200 mt-4">
-            <Link to="#" className="hover:text-pink-300 transition">
-              Forgot Password?
-            </Link>
+          <div className="flex justify-end text-sm text-richblack-200 mt-4">
             <Link to="/signup" className="hover:text-pink-300 transition">
               Sign Up
             </Link>

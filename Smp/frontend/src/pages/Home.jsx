@@ -98,18 +98,8 @@ const Home = () => {
         <div
           className={`${
             selectedChat ? "hidden" : "block"
-          } sm:block sm:w-[35%] w-full h-full bg-richblack-800 relative`}
+          } sm:block sm:w-[35%] w-full h-full bg-richblack-800 relative border-r border-yellow-600`}
         >
-          {/* New Chat Button */}
-          <div className="absolute bottom-4 right-4 z-10">
-            <button
-              onClick={() => dispatch(setUserSearchBox())}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-richblack-900 font-semibold rounded-full shadow hover:bg-yellow-100 transition"
-            >
-              <MdChat size={22} />
-              <span className="hidden sm:block">New Chat</span>
-            </button>
-          </div>
           {/* Content */}
           <div className="h-full overflow-y-auto custom-scrollbar">
             {isUserSearchBox ? <UserSearch /> : <MyChat />}

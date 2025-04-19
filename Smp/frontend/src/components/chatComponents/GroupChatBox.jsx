@@ -41,8 +41,9 @@ const GroupChatBox = () => {
 			})
 				.then((res) => res.json())
 				.then((json) => {
-					setUsers(json.data || []);
-					setSelectedUsers(json.data || []);
+					const studentUsers = (json.data || []).filter(u => u.accountType === 'student');
+					setUsers(studentUsers);
+					setSelectedUsers(studentUsers);
 					dispatch(setChatLoading(false));
 				})
 				.catch((err) => {
@@ -122,30 +123,30 @@ const GroupChatBox = () => {
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-2 sm:px-4">
+		<div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
 			<div className="w-full max-w-2xl rounded-lg bg-richblack-800 border border-richblack-600 p-5 shadow-md relative">
-				<h2 className="text-2xl font-bold text-yellow-50 text-center mb-4 underline underline-offset-8">
+				<h2 className="text-2xl font-bold text-yellow-400 text-center mb-6">
 					Create a Group
 				</h2>
 
 				{/* Search and selected users */}
 				<div className="space-y-4">
 					{/* Search input */}
-					<div className="flex gap-2 items-center">
+					<div className="relative">
+						<FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
 						<input
 							value={inputUserName}
 							onChange={(e) => setInputUserName(e.target.value)}
 							type="text"
 							placeholder="Search users..."
-							className="flex-1 bg-richblack-700 border border-richblack-600 text-white px-3 py-2 rounded-md placeholder:text-richblack-400 focus:ring-2 focus:ring-yellow-200 outline-none"
+							className="w-full bg-richblack-700 border border-richblack-600 text-white pl-10 pr-4 py-2 rounded-md placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						/>
-						<FaSearch className="text-richblack-300" />
 					</div>
 
 					{/* Selected users */}
 					<div
 						ref={groupUser}
-						className="flex gap-2 flex-wrap max-h-20 overflow-y-auto"
+						className="flex gap-2 flex-wrap max-h-24 overflow-y-auto py-2"
 					>
 						{isGroupUsers.map((user) => (
 							<div
@@ -173,13 +174,13 @@ const GroupChatBox = () => {
 							</div>
 						) : (
 							selectedUsers.map((user) => (
-								<div
+								<button
 									key={user._id}
 									onClick={() => {
 										addGroupUser(user);
 										setInputUserName("");
 									}}
-									className="flex items-center gap-3 p-2 rounded-md border border-richblack-600 hover:bg-richblack-700 transition cursor-pointer"
+									className="w-full flex items-center gap-3 p-3 rounded-lg border border-richblack-600 hover:bg-richblack-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 								>
 									<img
 										src={user.image}
@@ -194,22 +195,22 @@ const GroupChatBox = () => {
 											{SimpleDateAndTime(user.createdAt)}
 										</span>
 									</div>
-								</div>
+								</button>
 							))
 						)}
 					</div>
 
 					{/* Group Name + Button */}
-					<div className="flex gap-2 items-center">
+					<div className="flex gap-3 items-center mt-4">
 						<input
 							type="text"
 							placeholder="Group Name"
 							onChange={(e) => setGroupName(e.target.value)}
-							className="flex-1 bg-richblack-700 border border-richblack-600 text-white px-3 py-2 rounded-md placeholder:text-richblack-400 focus:ring-2 focus:ring-yellow-200 outline-none"
+							className="flex-1 bg-richblack-700 border border-richblack-600 text-white px-4 py-2 rounded-full placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						/>
 						<button
 							onClick={handleCreateGroupChat}
-							className="bg-yellow-50 hover:bg-yellow-100 text-black font-semibold px-4 py-2 rounded-md transition"
+							className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-6 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 						>
 							Create
 						</button>
@@ -219,7 +220,7 @@ const GroupChatBox = () => {
 				{/* Close Button */}
 				<button
 					onClick={() => dispatch(setGroupChatBox())}
-					className="absolute top-3 right-3 text-richblack-300 hover:text-pink-300"
+					className="absolute top-3 right-3 p-2 text-richblack-300 hover:text-yellow-400 transition"
 				>
 					<MdOutlineClose size={24} />
 				</button>

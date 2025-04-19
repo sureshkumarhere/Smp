@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaFolderOpen, FaPaperPlane } from "react-icons/fa";
+import { FaFolderOpen, FaPaperPlane, FaSmile } from "react-icons/fa";
 import { LuLoader } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
+import Picker from "emoji-picker-react";
 
 import { setSendLoading, setTyping } from "../../redux/slices/conditionSlice";
 import { addNewMessage, addNewMessageId } from "../../redux/slices/messageSlice";
@@ -13,6 +14,7 @@ let lastTypingTime;
 const MessageSend = ({ chatId }) => {
 	const mediaFile = useRef();
 	const [newMessage, setMessage] = useState("");
+	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
 	const dispatch = useDispatch();
 	const isSendLoading = useSelector((state) => state?.condition?.isSendLoading);
@@ -91,60 +93,57 @@ const MessageSend = ({ chatId }) => {
 
 	return (
 		<form
-			className="w-full flex items-center gap-2 h-[7vh] px-3 bg-slate-800 text-white"
+			className="relative w-full flex items-center gap-4 h-[7vh] px-4 bg-richblack-800 border-t border-richblack-600 text-white mt-6"
 			onSubmit={(e) => e.preventDefault()}
 		>
 			{/* File Upload (coming soon) */}
-			<label htmlFor="media" className="cursor-pointer">
-				<FaFolderOpen
-					title="Open File"
-					size={22}
-					className="active:scale-75 hover:text-green-400"
-				/>
-			</label>
-			<input
-				ref={mediaFile}
-				type="file"
-				name="image"
-				accept="image/png, image/jpg, image/gif, image/jpeg"
-				id="media"
-				className="hidden"
-				onChange={handleMediaBox}
-			/>
+			<button
+				type="button"
+				onClick={() => mediaFile.current.click()}
+				className="p-2 rounded-md hover:bg-richblack-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+				title="Open File"
+			>
+				<FaFolderOpen size={20} />
+			</button>
+			<button
+				type="button"
+				onClick={() => setShowEmojiPicker(v => !v)}
+				className="p-2 rounded-md hover:bg-richblack-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+				title="Emoji"
+			>
+				<FaSmile size={20} />
+			</button>
+			{showEmojiPicker && (
+				<div className="absolute bottom-full mb-2 left-0 z-50">
+					<Picker onEmojiClick={(emojiData) => { setMessage(m => m + emojiData.emoji); setShowEmojiPicker(false); }} />
+				</div>
+			)}
 
 			{/* Message Input */}
 			<input
 				type="text"
-				className="outline-none p-2 w-full bg-transparent placeholder:text-slate-400"
+				className="flex-1 bg-richblack-700 px-4 py-2 rounded-full placeholder:text-richblack-400 text-richblack-5 focus:outline-none focus:ring-2 focus:ring-yellow-400"
 				placeholder="Type a message..."
 				value={newMessage}
 				onChange={handleTyping}
 			/>
 
 			{/* Send Button or Loader */}
-			<span className="flex justify-center items-center">
-				{newMessage.trim() && !isSendLoading && (
-					<button
-						className="outline-none p-2 border-slate-500 border-l"
-						onClick={handleSendMessage}
-					>
-						<FaPaperPlane
-							title="Send"
-							size={18}
-							className="active:scale-75 hover:text-green-400"
-						/>
-					</button>
-				)}
-				{isSendLoading && (
-					<div className="p-2 border-slate-500 border-l">
-						<LuLoader
-							title="Sending..."
-							fontSize={18}
-							className="animate-spin"
-						/>
-					</div>
-				)}
-			</span>
+			{!isSendLoading && newMessage.trim() && (
+				<button
+					type="button"
+					onClick={handleSendMessage}
+					className="p-2 rounded-full bg-yellow-400 text-black hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+					title="Send Message"
+				>
+					<FaPaperPlane size={18} />
+				</button>
+			)}
+			{isSendLoading && (
+				<div className="p-2">
+					<LuLoader className="animate-spin text-yellow-400" size={18} />
+				</div>
+			)}
 		</form>
 	);
 };
