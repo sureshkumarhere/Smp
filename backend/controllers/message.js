@@ -2,12 +2,13 @@ const Chat = require("../models/chat");
 const Message = require("../models/message");
 
 const createMessage = async (req, res) => {
-	const { message, chatId } = req.body;
+	const { message, chatId , image_urls} = req.body;  // image urls is the array of image urls
 	if (message) {
 		const newMessage = await Message.create({
 			sender: req.user._id,
 			message: message,
 			chat: chatId,
+			image_urls: image_urls,
 		});
 		const chat = await Chat.findByIdAndUpdate(chatId, {
 			latestMessage: newMessage._id,
