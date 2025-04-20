@@ -17,7 +17,7 @@ import Loading from "./components/loading/Loading";
 
 // Pages
 import Home from "./pages/Home";
-import SignUp from "./pages/SignUp";
+import SignUp from "./pages/Signup";
 import SignIn from "./pages/SignIn";
 import Error from "./pages/Error";
 import MyProfile from "./pages/MyProfile";

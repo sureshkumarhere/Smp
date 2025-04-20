@@ -28,9 +28,63 @@ const MessageSend = ({ chatId }) => {
 	}, [dispatch]);
 
 	// Placeholder for media upload feature
-	const handleMediaBox = () => {
-		if (mediaFile.current?.files[0]) {
-			toast.warn("Media upload feature coming soon...");
+	const handleMediaUpload = async () => {
+		const files = mediaFile.current?.files;
+		if (!files || files.length === 0) return;
+
+		const formData = new FormData();
+		for (let i = 0; i < files.length; i++) {
+			formData.append('images', files[i]);
+		}
+
+		try {
+			const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/message/upload`, {
+				method: 'POST',
+				body: formData,
+			});
+			const data = await res.json();
+
+
+			if (data.urls) {
+			// const data = {urls:["https://example.com/image1.jpg", "https://example.com/image2.jpg"]}; // Mock response
+			// if(1){
+				for (const url of data.urls) {
+					await sendMediaMessage(url);
+				}
+			} else {
+				toast.error("Upload failed");
+			}
+			mediaFile.current.value = null;
+
+		} catch (err) {
+			console.error(err);
+			toast.error("Image upload error");
+		}
+	};
+
+
+	const sendMediaMessage = async (mediaUrl) => {
+		const token = localStorage.getItem("token");
+
+		dispatch(setSendLoading(true));
+		try {
+			const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/message`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ message :"imagefiles", chatId , image_urls: [mediaUrl] }),
+			});
+			const result = await response.json();
+			dispatch(addNewMessageId(result?.data?._id));
+			dispatch(addNewMessage(result?.data));
+			socket.emit("new message", result?.data);
+		} catch (err) {
+			console.error(err);
+			toast.error("Failed to send media message");
+		} finally {
+			dispatch(setSendLoading(false));
 		}
 	};
 
@@ -96,7 +150,16 @@ const MessageSend = ({ chatId }) => {
 			className="relative w-full flex items-center gap-4 h-[7vh] px-4 bg-richblack-800 border-t border-richblack-600 text-white mt-6"
 			onSubmit={(e) => e.preventDefault()}
 		>
-			{/* File Upload (coming soon) */}
+			{/* File Upload */}
+			<input
+				type="file"
+				ref={mediaFile}
+				accept="image/*"
+				multiple
+				style={{ display: "none" }}
+				onChange={handleMediaUpload}
+			/>
+
 			<button
 				type="button"
 				onClick={() => mediaFile.current.click()}

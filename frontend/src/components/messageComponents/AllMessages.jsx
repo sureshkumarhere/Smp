@@ -97,7 +97,24 @@ const AllMessages = ({ allMessage }) => {
 											{message.sender.firstName}
 										</span>
 									)}
-									<span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>{message.message}</span>
+									{/* <span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>{(message.message == "imagefiles") ? message.image_urls[0] : message.message}</span> */}
+									{message.message === "imagefiles" && message.image_urls?.length > 0 ? (
+									<div className="flex flex-wrap gap-2">
+											{message.image_urls.map((url, idx) => (
+												<img
+													key={idx}
+													src={url}
+													alt={`uploaded-img-${idx}`}
+													className="max-w-[200px] max-h-[200px] rounded-md object-cover"
+												/>
+											))}
+										</div>
+									) : (
+										<span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>
+											{message.message}
+										</span>
+									)}
+
 									<span className="absolute bottom-1 right-2 flex items-center text-[10px] text-richblack-400 gap-1">
 										{SimpleTime(message.updatedAt)}
 										{isMyMessage && <VscCheckAll fontSize={16} />}
