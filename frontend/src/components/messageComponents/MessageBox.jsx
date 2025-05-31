@@ -130,7 +130,7 @@ const MessageBox = ({ chatId }) => {
 			{isMessageLoading ? (
 				<MessageLoading />
 			) : (
-				<AllMessages allMessage={allMessage} />
+				<AllMessages allMessage={allMessage} authUserId={authUserId} />
 			)}
 
 			{/* Message Input */}

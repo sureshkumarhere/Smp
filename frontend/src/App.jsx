@@ -17,7 +17,7 @@ import Loading from "./components/loading/Loading";
 
 // Pages
 import Home from "./pages/Home";
-import SignUp from "./pages/Signup";
+import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Error from "./pages/Error";
 import MyProfile from "./pages/MyProfile";
@@ -25,6 +25,7 @@ import MyProfile from "./pages/MyProfile";
 // Redux Store
 import store from "./redux/store";
 
+// Layout Component
 const AppLayout = () => {
   const [toastPosition, setToastPosition] = useState("bottom-left");
 
@@ -44,8 +45,8 @@ const AppLayout = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-tr from-black via-blue-900 to-black text-white">
-      {/* Toast */}
+    <div className="bg-gradient-to-tr from-black via-blue-900 to-black text-white min-h-screen flex flex-col">
+      {/* Toast Notifications */}
       <ToastContainer
         position={toastPosition}
         autoClose={3000}
@@ -61,15 +62,22 @@ const AppLayout = () => {
         }}
       />
 
-      {/* Layout */}
+      {/* Header */}
       <Header />
       <div className="h-16 md:h-20" />
-      <main className="min-h-[85vh] p-2 sm:p-4">
+
+      {/* Main Content */}
+      <main className="flex-1 min-h-[85vh] p-2 sm:p-4">
         <Outlet />
+        {/* Overlays */}
         {isGroupChatBox && <GroupChatBox />}
         {isNotificationBox && <NotificationBox />}
       </main>
+
+      {/* Loading Overlay */}
       {isLoading && <Loading />}
+
+      {/* Sidebar */}
       <Sidebar />
     </div>
   );

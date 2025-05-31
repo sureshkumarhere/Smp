@@ -6,151 +6,120 @@ const mongoose = require("mongoose");
 
 const app = express();
 
+// Enhanced CORS configuration
 const corsOptions = {
-	origin: process.env.FRONTEND_URL,
-	methods: ["GET", "POST", "DELETE"],
-	allowedHeaders: ["Content-Type", "Authorization"],
-	credentials: true,
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 const PORT = process.env.PORT || 3000;
 
-// All routers
+// Routes
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
 const chatRouter = require("./routes/chat");
 const messageRouter = require("./routes/message");
 
-// Connect to Database
-main()
-	.then(() => console.log("Database Connection established"))
-	.catch((err) => console.log(err));
-
-async function main() {
-	await mongoose.connect(process.env.MONGODB_URI);
+// Database Connection
+async function connectDB() {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log("Database connection established");
+    } catch (err) {
+        console.error("Database connection error:", err.message);
+        process.exit(1);
+    }
 }
 
-// Root route
+// Server endpoints
 app.get("/", (req, res) => {
-	res.json({
-		message: "Welcome to Chat Application!",
-		frontend_url: process.env.FRONTEND_URL,
-	});
+    res.json({
+        status: "healthy",
+        message: "Chat API Server",
+        version: "1.0.0"
+    });
 });
 
-// All routes
+// Route handlers
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/message", messageRouter);
 
-// Invaild routes
-app.all("*", (req, res) => {
-	res.json({ error: "Invaild Route" });
-});
-
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
-	const errorMessage = err.message || "Something Went Wrong!";
-	res.status(500).json({ message: errorMessage });
+    console.error("Server Error:", err.stack);
+    res.status(500).json({
+        error: "Internal Server Error",
+        message: process.env.NODE_ENV === "development" ? err.message : "Something went wrong"
+    });
 });
 
-// Start the server
-const server = app.listen(PORT, async () => {
-	console.log(`Server listening on ${PORT}`);
+// 404 Handler
+app.use("*", (req, res) => {
+    res.status(404).json({ error: "Endpoint not found" });
 });
 
-// Socket.IO setup
-const { Server } = require("socket.io");
-const io = new Server(server, {
-	pingTimeout: 60000,
-	transports: ["websocket"],
-	cors: corsOptions,
-});
+// Start Server
+async function startServer() {
+    await connectDB();
+    const server = app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 
-// Socket connection
-io.on("connection", (socket) => {
-	console.log("Connected to socket.io:", socket.id);
+    // Socket.IO Configuration
+    const { Server } = require("socket.io");
+    const io = new Server(server, {
+        pingTimeout: 60000,
+        transports: ["websocket"],
+        cors: corsOptions
+    });
 
-	// Join user and message send to client
-	const setupHandler = (userId) => {
-		if (!socket.hasJoined) {
-			socket.join(userId);
-			socket.hasJoined = true;
-			console.log("User joined:", userId);
-			socket.emit("connected");
-		}
-	};
-	const newMessageHandler = (newMessageReceived) => {
-		let chat = newMessageReceived?.chat;
-		chat?.users.forEach((user) => {
-			if (user._id === newMessageReceived.sender._id) return;
-			console.log("Message received by:", user._id);
-			socket.in(user._id).emit("message received", newMessageReceived);
-		});
-	};
+    // Socket.IO Event Handlers
+    io.on("connection", (socket) => {
+        console.log("New socket connection:", socket.id);
 
-	// Join a Chat Room and Typing effect
-	const joinChatHandler = (room) => {
-		if (socket.currentRoom) {
-			if (socket.currentRoom === room) {
-				console.log(`User already in Room: ${room}`);
-				return;
-			}
-			socket.leave(socket.currentRoom);
-			console.log(`User left Room: ${socket.currentRoom}`);
-		}
-		socket.join(room);
-		socket.currentRoom = room;
-		console.log("User joined Room:", room);
-	};
-	const typingHandler = (room) => {
-		socket.in(room).emit("typing");
-	};
-	const stopTypingHandler = (room) => {
-		socket.in(room).emit("stop typing");
-	};
+        // Setup and Chat Events
+        socket.on("setup", (userId) => {
+            socket.join(userId);
+            console.log(`User ${userId} connected`);
+            socket.emit("connected");
+        });
 
-	// Clear, Delete and Create chat handlers
-	const clearChatHandler = (chatId) => {
-		socket.in(chatId).emit("clear chat", chatId);
-	};
-	const deleteChatHandler = (chat, authUserId) => {
-		chat.users.forEach((user) => {
-			if (authUserId === user._id) return;
-			console.log("Chat delete:", user._id);
-			socket.in(user._id).emit("delete chat", chat._id);
-		});
-	};
-	const chatCreateChatHandler = (chat, authUserId) => {
-		chat.users.forEach((user) => {
-			if (authUserId === user._id) return;
-			console.log("Create chat:", user._id);
-			socket.in(user._id).emit("chat created", chat);
-		});
-	};
+        socket.on("join chat", (roomId) => {
+            socket.join(roomId);
+            console.log(`User joined chat room: ${roomId}`);
+        });
 
-	socket.on("setup", setupHandler);
-	socket.on("new message", newMessageHandler);
-	socket.on("join chat", joinChatHandler);
-	socket.on("typing", typingHandler);
-	socket.on("stop typing", stopTypingHandler);
-	socket.on("clear chat", clearChatHandler);
-	socket.on("delete chat", deleteChatHandler);
-	socket.on("chat created", chatCreateChatHandler);
+        // Message Handling
+        socket.on("new message", (newMessage) => {
+            const chat = newMessage.chat;
+            if (!chat?.users) return;
 
-	socket.on("disconnect", () => {
-		console.log("User disconnected:", socket.id);
-		socket.off("setup", setupHandler);
-		socket.off("new message", newMessageHandler);
-		socket.off("join chat", joinChatHandler);
-		socket.off("typing", typingHandler);
-		socket.off("stop typing", stopTypingHandler);
-		socket.off("clear chat", clearChatHandler);
-		socket.off("delete chat", deleteChatHandler);
-		socket.off("chat created", chatCreateChatHandler);
-	});
+            chat.users.forEach(user => {
+                if (user._id === newMessage.sender._id) return;
+                socket.in(user._id).emit("message received", newMessage);
+            });
+        });
+
+        // Typing Indicators
+        socket.on("typing", (roomId) => socket.in(roomId).emit("typing"));
+        socket.on("stop typing", (roomId) => socket.in(roomId).emit("stop typing"));
+
+        // Cleanup
+        socket.on("disconnect", () => {
+            console.log("User disconnected:", socket.id);
+            socket.removeAllListeners();
+        });
+    });
+}
+
+startServer().catch(err => {
+    console.error("Server failed to start:", err);
+    process.exit(1);
 });

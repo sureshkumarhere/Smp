@@ -25,46 +25,72 @@ const MessageSend = ({ chatId }) => {
 	useEffect(() => {
 		socket.on("typing", () => dispatch(setTyping(true)));
 		socket.on("stop typing", () => dispatch(setTyping(false)));
+		return () => {
+			socket.off("typing");
+			socket.off("stop typing");
+		};
 	}, [dispatch]);
 
-	// Placeholder for media upload feature
+	// Upload any file type
 	const handleMediaUpload = async () => {
 		const files = mediaFile.current?.files;
 		if (!files || files.length === 0) return;
 
 		const formData = new FormData();
 		for (let i = 0; i < files.length; i++) {
-			formData.append('images', files[i]);
+			formData.append("file", files[i]);
 		}
 
+		const token = localStorage.getItem("token");
+
+		dispatch(setSendLoading(true));
 		try {
 			const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/message/upload`, {
-				method: 'POST',
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
 				body: formData,
 			});
+
 			const data = await res.json();
 
-
-			if (data.urls) {
-			// const data = {urls:["https://example.com/image1.jpg", "https://example.com/image2.jpg"]}; // Mock response
-			// if(1){
-				for (const url of data.urls) {
-					await sendMediaMessage(url);
+			if (data.files && Array.isArray(data.files)) {
+				for (const file of data.files) {
+					let mediaType = "file";
+					if (file.type === "image") mediaType = "image";
+					else if (file.type === "video") mediaType = "video";
+					await sendMediaMessage(file.url, mediaType, file.name);
 				}
 			} else {
 				toast.error("Upload failed");
 			}
 			mediaFile.current.value = null;
-
 		} catch (err) {
-			console.error(err);
-			toast.error("Image upload error");
+			console.error("Upload error:", err);
+			toast.error("Media upload error");
+		} finally {
+			dispatch(setSendLoading(false));
 		}
 	};
 
-
-	const sendMediaMessage = async (mediaUrl) => {
+	const sendMediaMessage = async (mediaUrl, mediaType, fileName = "") => {
 		const token = localStorage.getItem("token");
+		const payload = {
+			message:
+				mediaType === "video"
+					? "videofiles"
+					: mediaType === "image"
+					? "imagefiles"
+					: fileName || "file",
+			chatId,
+			image_urls: mediaType === "image" ? [mediaUrl] : [],
+			video_urls: mediaType === "video" ? [mediaUrl] : [],
+			files:
+				mediaType === "file"
+					? [{ url: mediaUrl, name: fileName }]
+					: [],
+		};
 
 		dispatch(setSendLoading(true));
 		try {
@@ -74,21 +100,20 @@ const MessageSend = ({ chatId }) => {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ message :"imagefiles", chatId , image_urls: [mediaUrl] }),
+				body: JSON.stringify(payload),
 			});
 			const result = await response.json();
 			dispatch(addNewMessageId(result?.data?._id));
 			dispatch(addNewMessage(result?.data));
 			socket.emit("new message", result?.data);
 		} catch (err) {
-			console.error(err);
+			console.error("Failed to send media message:", err);
 			toast.error("Failed to send media message");
 		} finally {
 			dispatch(setSendLoading(false));
 		}
 	};
 
-	// Send message
 	const handleSendMessage = async () => {
 		const message = newMessage.trim();
 		if (!message) return;
@@ -114,14 +139,13 @@ const MessageSend = ({ chatId }) => {
 			dispatch(addNewMessage(result?.data));
 			socket.emit("new message", result?.data);
 		} catch (err) {
-			console.error(err);
+			console.error("Text message error:", err);
 			toast.error("Message sending failed");
 		} finally {
 			dispatch(setSendLoading(false));
 		}
 	};
 
-	// Typing handler
 	const handleTyping = (e) => {
 		const value = e.target.value;
 		setMessage(value);
@@ -138,7 +162,6 @@ const MessageSend = ({ chatId }) => {
 		setTimeout(() => {
 			const timeNow = new Date().getTime();
 			const timeDiff = timeNow - lastTypingTime;
-
 			if (timeDiff > timerLength) {
 				socket.emit("stop typing", selectedChat._id);
 			}
@@ -154,7 +177,6 @@ const MessageSend = ({ chatId }) => {
 			<input
 				type="file"
 				ref={mediaFile}
-				accept="image/*"
 				multiple
 				style={{ display: "none" }}
 				onChange={handleMediaUpload}
@@ -164,21 +186,30 @@ const MessageSend = ({ chatId }) => {
 				type="button"
 				onClick={() => mediaFile.current.click()}
 				className="p-2 rounded-md hover:bg-richblack-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
-				title="Open File"
+				title="Upload File"
+				disabled={isSendLoading}
 			>
 				<FaFolderOpen size={20} />
 			</button>
+
 			<button
 				type="button"
-				onClick={() => setShowEmojiPicker(v => !v)}
+				onClick={() => setShowEmojiPicker((v) => !v)}
 				className="p-2 rounded-md hover:bg-richblack-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
 				title="Emoji"
+				disabled={isSendLoading}
 			>
 				<FaSmile size={20} />
 			</button>
+
 			{showEmojiPicker && (
 				<div className="absolute bottom-full mb-2 left-0 z-50">
-					<Picker onEmojiClick={(emojiData) => { setMessage(m => m + emojiData.emoji); setShowEmojiPicker(false); }} />
+					<Picker
+						onEmojiClick={(emojiData) => {
+							setMessage((m) => m + emojiData.emoji);
+							setShowEmojiPicker(false);
+						}}
+					/>
 				</div>
 			)}
 
@@ -189,6 +220,7 @@ const MessageSend = ({ chatId }) => {
 				placeholder="Type a message..."
 				value={newMessage}
 				onChange={handleTyping}
+				disabled={isSendLoading}
 			/>
 
 			{/* Send Button or Loader */}

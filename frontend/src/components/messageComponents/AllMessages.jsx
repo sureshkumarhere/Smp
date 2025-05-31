@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import { VscCheckAll } from "react-icons/vsc";
 import { CgChevronDoubleDown } from "react-icons/cg";
 import {
-	SimpleDateAndTime,
 	SimpleDateMonthDay,
 	SimpleTime,
 } from "../../utils/formateDateTime";
@@ -23,7 +22,6 @@ const AllMessages = ({ allMessage }) => {
 		}
 	};
 
-	// Auto scroll and show scroll-to-bottom button logic
 	useEffect(() => {
 		handleScrollDownChat();
 		if (
@@ -67,11 +65,6 @@ const AllMessages = ({ allMessage }) => {
 					const currDate = new Date(message?.updatedAt).toDateString();
 					const showDateHeader = prevDate !== currDate;
 
-					const showAvatar =
-						isGroup &&
-						!isMyMessage &&
-						allMessage[idx + 1]?.sender?._id !== message?.sender?._id;
-
 					return (
 						<Fragment key={message._id}>
 							{showDateHeader && (
@@ -83,23 +76,29 @@ const AllMessages = ({ allMessage }) => {
 							)}
 
 							<div className={`flex items-start ${isMyMessage ? 'justify-end' : 'justify-start'} gap-2`}>
-								{/* Avatar (group only) */}
 								{isGroup && !isMyMessage && (
 									<img src={message.sender.image} alt="avatar" className="h-8 w-8 rounded-full" />
 								)}
-								<div className={`relative max-w-[75%] p-2 pb-6 min-w-[6rem] flex flex-col ${
-									isMyMessage ? 'bg-yellow-200 text-black rounded-tl-lg rounded-bl-lg rounded-br-lg' :
-												'bg-richblack-700 text-white rounded-tr-lg rounded-br-lg rounded-bl-lg'
-								}`}
-								>
+
+								<div className={`relative max-w-[75%] p-2 pb-6 min-w-[6rem] flex flex-col ${isMyMessage
+										? 'bg-yellow-200 text-black rounded-tl-lg rounded-bl-lg rounded-br-lg'
+										: 'bg-richblack-700 text-white rounded-tr-lg rounded-br-lg rounded-bl-lg'
+									}`}>
 									{isGroup && !isMyMessage && (
 										<span className="text-xs font-semibold text-yellow-400 mb-1">
 											{message.sender.firstName}
 										</span>
 									)}
-									{/* <span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>{(message.message == "imagefiles") ? message.image_urls[0] : message.message}</span> */}
-									{message.message === "imagefiles" && message.image_urls?.length > 0 ? (
-									<div className="flex flex-wrap gap-2">
+
+									{message.message && message.message !== "imagefiles" && message.message !== "videofiles" && (
+										<span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>
+											{message.message}
+										</span>
+									)}
+
+									{/* Images */}
+									{message.image_urls?.length > 0 && (
+										<div className="flex flex-wrap gap-2 mt-1">
 											{message.image_urls.map((url, idx) => (
 												<img
 													key={idx}
@@ -109,10 +108,57 @@ const AllMessages = ({ allMessage }) => {
 												/>
 											))}
 										</div>
-									) : (
-										<span className={`${isMyMessage ? 'text-base' : 'text-sm'} leading-relaxed`}>
-											{message.message}
-										</span>
+									)}
+
+									{/* Videos */}
+									{message.video_urls?.length > 0 && (
+										<div className="flex flex-wrap gap-2 mt-1">
+											{message.video_urls.map((url, idx) => (
+												<video
+													key={idx}
+													src={url}
+													controls
+													className="max-w-[200px] max-h-[200px] rounded-md object-cover"
+												/>
+											))}
+										</div>
+									)}
+
+									{/* Generic files */}
+									{message.files?.length > 0 && (
+										<div className="flex flex-col gap-2 mt-1">
+											{message.files.map((file, idx) => {
+												const fileName = file.name || "download";
+												let downloadUrl = file.url;
+
+												// For Cloudinary raw files, use fl_attachment only
+												if (
+													downloadUrl.includes("cloudinary.com") &&
+													downloadUrl.includes("/raw/upload/")
+												) {
+													downloadUrl = downloadUrl.replace(
+														"/upload/",
+														"/upload/fl_attachment/"
+													);
+												}
+
+												return (
+													<div key={idx} className="flex items-center gap-2">
+														<span className="text-white break-all">{fileName}</span>
+														<a
+															href={downloadUrl}
+															download={fileName}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-blue-400 underline"
+															style={{ wordBreak: "break-word" }}
+														>
+															Download
+														</a>
+													</div>
+												);
+											})}
+										</div>
 									)}
 
 									<span className="absolute bottom-1 right-2 flex items-center text-[10px] text-richblack-400 gap-1">
@@ -120,6 +166,7 @@ const AllMessages = ({ allMessage }) => {
 										{isMyMessage && <VscCheckAll fontSize={16} />}
 									</span>
 								</div>
+
 								{isGroup && isMyMessage && (
 									<img src={message.sender.image} alt="avatar" className="h-8 w-8 rounded-full" />
 								)}
