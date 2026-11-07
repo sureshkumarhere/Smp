@@ -17,6 +17,8 @@ pnpm-debug.log*
 # Env files (store secrets like API keys)
 .env
 .env.*    # handles .env.development, .env.production etc.
+# Keep example env files for reference
+!.env.example
 
 # OS-generated files
 .DS_Store

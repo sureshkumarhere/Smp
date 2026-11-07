@@ -1,5 +1,12 @@
 # SMP Chat — Features & Advantages
 
+[![CI Checks](https://github.com/sureshkumarhere/Smp/actions/workflows/ci.yml/badge.svg)](https://github.com/sureshkumarhere/Smp/actions/workflows/ci.yml)
+![Node.js](https://img.shields.io/badge/Node.js-v20-339933?logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5.2-646CFF?logo=vite&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-4.7-010101?logo=socketdotio&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-8.4-47A248?logo=mongodb&logoColor=white)
+
 SMP Chat is a collaborative chat platform designed for mentors and students. It focuses on group collaboration, easy meeting coordination, and clear attendance tracking so teams can stay connected without losing context.
 
 ## Key features
