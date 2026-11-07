@@ -154,7 +154,7 @@ const MemberAdd = ({ setMemberAddBox }) => {
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
 					<div className="bg-richblack-800 border border-yellow-400 rounded-lg p-6 w-full max-w-xs shadow-xl">
 						<h2 className="text-lg font-bold mb-4 text-center text-white">
-							Add '{addUserName}' to group?
+							Add &apos;{addUserName}&apos; to group?
 						</h2>
 						<div className="flex justify-center gap-4">
 							<button

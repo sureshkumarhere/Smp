@@ -50,7 +50,12 @@ jobs:
           cd frontend
           npm install
 
-      - name: Build frontend
+      - name: Run ESLint (Rules of Hooks & Syntax)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Build frontend (Bundle Check)
         run: |
           cd frontend
           npm run build
