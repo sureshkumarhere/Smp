@@ -5,10 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const location = useLocation();
-  if (location.pathname === "/signin" || location.pathname === "/signup") {
-    return null;
-  }
-
   const user = useSelector((store) => store.auth);
   const token = localStorage.getItem("token");
   const isLoggedIn = Boolean(token || user?._id);
@@ -19,6 +15,10 @@ const Sidebar = () => {
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
+
+  if (location.pathname === "/signin" || location.pathname === "/signup") {
+    return null;
+  }
 
   return (
     <>
