@@ -2,10 +2,39 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../config/jwtProvider");
 
+const getAllowedDomains = () => {
+	const envVal = process.env.ALLOWED_EMAIL_DOMAINS || "*";
+	return envVal
+		.split(",")
+		.map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+		.filter(Boolean);
+};
+
+const isEmailDomainValid = (email) => {
+	if (!email || typeof email !== "string") return false;
+	const isBasicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+	if (!isBasicEmail) return false;
+
+	const allowedDomains = getAllowedDomains();
+	if (allowedDomains.includes("*") || allowedDomains.length === 0) {
+		return true;
+	}
+
+	const emailDomain = email.split("@")[1]?.toLowerCase();
+	return allowedDomains.includes(emailDomain);
+};
+
 const registerUser = async (req, res, next) => {
 	let { firstName, lastName, email, password, regNo, accountType } = req.body;
 	if (!firstName || !lastName || !email || !password || !regNo || !accountType) {
 		return res.status(400).json({ message: "Required: All Fields" });
+	}
+
+	if (!isEmailDomainValid(email)) {
+		const allowed = getAllowedDomains();
+		return res.status(400).json({
+			message: `Registration is only allowed for: ${allowed.map((d) => "@" + d).join(", ")}`,
+		});
 	}
 	const existingEmail = await User.findOne({ email: email });
 	if (existingEmail) {

@@ -107,7 +107,7 @@ const SignIn = () => {
                 <input
                   type="email"
                   id="email"
-                  placeholder="you@mnnit.ac.in"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-12 pl-10 px-4 rounded-xl bg-richblack-700/70 border border-white/10 text-white placeholder:text-richblack-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition"

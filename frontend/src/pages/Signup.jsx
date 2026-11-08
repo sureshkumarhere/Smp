@@ -145,7 +145,7 @@ const SignUp = () => {
                 <input
                   type="email"
                   id="email"
-                  placeholder="john.20230000@mnnit.ac.in"
+                  placeholder="john.doe@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={inputBase}

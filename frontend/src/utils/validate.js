@@ -1,37 +1,83 @@
 // validate.js
 
-const mnnitEmailPattern = /^([a-z0-9-]+)\.([0-9]{8})@mnnit\.ac\.in$/i;
+const getAllowedDomains = () => {
+  const envVal = import.meta.env.VITE_ALLOWED_EMAIL_DOMAINS || "*";
+  return envVal
+    .split(",")
+    .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+    .filter(Boolean);
+};
+
+export const isEmailDomainValid = (email) => {
+  if (!email || typeof email !== "string") return false;
+  const isBasicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!isBasicEmail) return false;
+
+  const allowedDomains = getAllowedDomains();
+  if (allowedDomains.includes("*") || allowedDomains.length === 0) {
+    return true;
+  }
+
+  const emailDomain = email.split("@")[1]?.toLowerCase();
+  return allowedDomains.includes(emailDomain);
+};
+
+export const getEmailDomainErrorMessage = () => {
+  const allowed = getAllowedDomains();
+  if (allowed.includes("*") || allowed.length === 0) {
+    return "Invalid email address format";
+  }
+  return `Email must be from an allowed domain: ${allowed.map((d) => `@${d}`).join(", ")}`;
+};
 
 // Sign In validation
 export const checkValidSignInFrom = (email, password) => {
-  if (!mnnitEmailPattern.test(email)) {
-    return "Email must be in the format name.regNo@mnnit.ac.in";
+  if (!isEmailDomainValid(email)) {
+    return getEmailDomainErrorMessage();
   }
-  if (password.length < 4) return "Password should be at least 4 characters";
+  if (!password || password.length < 4) {
+    return "Password should be at least 4 characters";
+  }
   return null;
 };
 
 // Sign Up validation
 export const checkValidSignUpFrom = (firstName, lastName, email, password, regNo) => {
-  const isFirstValid = /\b([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+/.test(firstName);
-  const isLastValid = /\b([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+/.test(lastName);
+  const isFirstValid = firstName && firstName.trim().length >= 2;
+  const isLastValid = lastName && lastName.trim().length >= 1;
 
-  const match = email.match(mnnitEmailPattern);
-  const isEmailValid = Boolean(match) && match[2] === regNo;
+  if (!isFirstValid) return "First name must have at least 2 characters";
+  if (!isLastValid) return "Last name cannot be empty";
 
-  if (!isFirstValid) return "Invalid First Name format";
-  if (!isLastValid) return "Invalid Last Name format";
-  if (!/^\d{8}$/.test(regNo)) return "Registration Number must be exactly 8 digits";
-  if (!isEmailValid) return "Email must be in the format name.regNo@mnnit.ac.in";
-  if (password.length < 4) return "Password must be at least 4 characters";
+  if (!isEmailDomainValid(email)) {
+    return getEmailDomainErrorMessage();
+  }
+
+  // Registration Number validation
+  // If the email follows the legacy MNNIT pattern (name.regNo@mnnit.ac.in), verify matching
+  const mnnitMatch = email.match(/^([a-z0-9-]+)\.([0-9]{8})@mnnit\.ac\.in$/i);
+  if (mnnitMatch) {
+    if (mnnitMatch[2] !== regNo) {
+      return "Registration number must match the number in your college email";
+    }
+  } else {
+    // For other domains (e.g. gmail.com), allow any alphanumeric ID between 2 and 20 chars
+    if (!regNo || !/^[a-zA-Z0-9_-]{2,20}$/.test(regNo.trim())) {
+      return "Registration/ID number must be between 2 and 20 alphanumeric characters";
+    }
+  }
+
+  if (!password || password.length < 4) {
+    return "Password must be at least 4 characters";
+  }
 
   return null;
 };
 
 // Forgot Password validation
 export const checkValidForgotFrom = (email) => {
-  const isEmailValid = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(email);
-  if (!isEmailValid) return "Invalid email format";
+  if (!isEmailDomainValid(email)) {
+    return getEmailDomainErrorMessage();
+  }
   return null;
 };
-  
