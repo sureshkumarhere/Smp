@@ -6,6 +6,7 @@ const { authorization } = require("../middlewares/authorization");
 
 router.post("/signup", wrapAsync(authControllers.registerUser));
 router.post("/signin", wrapAsync(authControllers.loginUser));
+router.post("/google", wrapAsync(authControllers.googleAuth));
 router.post("/reset-password", authorization, wrapAsync(authControllers.resetPassword));
 
 module.exports = router;

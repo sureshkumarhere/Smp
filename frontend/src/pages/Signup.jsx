@@ -4,6 +4,7 @@ import { PiEye, PiEyeClosedLight } from "react-icons/pi";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { checkValidSignUpFrom } from "../utils/validate";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -98,6 +99,14 @@ const SignUp = () => {
             Sign Up
           </h2>
 
+          <GoogleAuthButton text="signup_with" />
+
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-white/10" />
+            <span className="px-3 text-xs uppercase tracking-wider text-richblack-400 font-medium">Or register with email</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
+
           <form onSubmit={handleSignup} className="space-y-5">
 {/* First Name */}
             <div className="flex flex-col">
@@ -120,7 +129,7 @@ const SignUp = () => {
             {/* Last Name */}
             <div className="flex flex-col">
               <label htmlFor="lastName" className="mb-1 text-sm font-medium text-richblack-200">
-                Last Name
+                Last Name (Optional)
               </label>
               <div className="relative">
                 <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />
@@ -147,7 +156,12 @@ const SignUp = () => {
                   id="email"
                   placeholder="john.doe@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmail(val);
+                    const match = val.match(/^([a-z0-9-]+)\.([0-9]{8})@mnnit\.ac\.in$/i);
+                    if (match) setRegNo(match[2]);
+                  }}
                   className={inputBase}
                 />
               </div>
@@ -156,7 +170,7 @@ const SignUp = () => {
             {/* Registration Number */}
             <div className="flex flex-col">
               <label htmlFor="regNo" className="mb-1 text-sm font-medium text-richblack-200">
-                Registration Number
+                Registration Number {email.endsWith("@mnnit.ac.in") ? "(Auto-detected)" : "(Optional for Gmail)"}
               </label>
               <div className="relative">
                 <FaIdBadge className="absolute left-3 top-1/2 transform -translate-y-1/2 text-richblack-400" />

@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { addAuth } from "../redux/slices/authSlice";
 import { checkValidSignInFrom } from "../utils/validate";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -89,9 +90,17 @@ const SignIn = () => {
 
         {/* Right: Form */}
         <div className="p-6 sm:p-8">
-          <h2 className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200 mb-8">
+          <h2 className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200 mb-6">
             Sign In
           </h2>
+
+          <GoogleAuthButton text="signin_with" />
+
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-white/10" />
+            <span className="px-3 text-xs uppercase tracking-wider text-richblack-400 font-medium">Or continue with email</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Email */}

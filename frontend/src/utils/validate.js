@@ -44,25 +44,23 @@ export const checkValidSignInFrom = (email, password) => {
 // Sign Up validation
 export const checkValidSignUpFrom = (firstName, lastName, email, password, regNo) => {
   const isFirstValid = firstName && firstName.trim().length >= 2;
-  const isLastValid = lastName && lastName.trim().length >= 1;
 
   if (!isFirstValid) return "First name must have at least 2 characters";
-  if (!isLastValid) return "Last name cannot be empty";
 
   if (!isEmailDomainValid(email)) {
     return getEmailDomainErrorMessage();
   }
 
   // Registration Number validation
-  // If the email follows the legacy MNNIT pattern (name.regNo@mnnit.ac.in), verify matching
+  // If the email follows the MNNIT pattern (name.regNo@mnnit.ac.in)
   const mnnitMatch = email.match(/^([a-z0-9-]+)\.([0-9]{8})@mnnit\.ac\.in$/i);
   if (mnnitMatch) {
-    if (mnnitMatch[2] !== regNo) {
+    if (regNo && mnnitMatch[2] !== regNo) {
       return "Registration number must match the number in your college email";
     }
   } else {
-    // For other domains (e.g. gmail.com), allow any alphanumeric ID between 2 and 20 chars
-    if (!regNo || !/^[a-zA-Z0-9_-]{2,20}$/.test(regNo.trim())) {
+    // For other domains (e.g. gmail.com), if provided, ensure valid format; if empty, backend auto-generates
+    if (regNo && !/^[a-zA-Z0-9_-]{2,20}$/.test(regNo.trim())) {
       return "Registration/ID number must be between 2 and 20 alphanumeric characters";
     }
   }

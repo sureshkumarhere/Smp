@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
 		},
 		lastName: {
 			type: String,
-			required: true,
+			default: "",
 		},
 		password: {
 			type: String,
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
 			type: String,
 			default: function () {
 				// generate an initials avatar using Dicebear
-				const seed = `${this.firstName} ${this.lastName}`;
+				const seed = `${this.firstName} ${this.lastName || ""}`.trim();
 				return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}`;
 			},
 		},

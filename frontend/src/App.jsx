@@ -8,6 +8,8 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 // Components
 import Header from "./components/Header";
 import NotificationBox from "./components/NotificationBox";
@@ -106,11 +108,15 @@ const routers = createBrowserRouter([
   },
 ]);
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+
 // App Entry
 function App() {
   return (
     <Provider store={store}>
-      <RouterProvider router={routers} />
+      <GoogleOAuthProvider clientId={googleClientId || "sample-google-client-id"}>
+        <RouterProvider router={routers} />
+      </GoogleOAuthProvider>
     </Provider>
   );
 }
