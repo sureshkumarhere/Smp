@@ -14,7 +14,14 @@ const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173,http:
 // Enhanced CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+        if (
+            !origin ||
+            allowedOrigins.includes("*") ||
+            allowedOrigins.includes(origin) ||
+            origin.endsWith(".vercel.app") ||
+            origin.includes("localhost") ||
+            origin.includes("127.0.0.1")
+        ) {
             callback(null, true);
             return;
         }
