@@ -1,60 +1,32 @@
-# Node modules (for Node.js/React/Next)
+# Dependencies
 node_modules/
 
-# Build output (React, Next.js, Vite, etc.)
-build/
+# Production build outputs (Vite & React)
 dist/
-.next/
-out/
+dist-ssr/
+build/
 .vite/
 
+# Environment files & secrets
+.env
+.env.*
+.env.local
+!.env.example
+
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Env files (store secrets like API keys)
-.env
-.env.*    # handles .env.development, .env.production etc.
-# Keep example env files for reference
-!.env.example
+# Deployment & cloud CLI caches
+.vercel
 
-# OS-generated files
+# Editor & OS files
 .DS_Store
 Thumbs.db
-
-# Editor configs & local dev
 .vscode/
 .idea/
 *.swp
-
-# Dependency locks (optional - team dependent)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# Python-related (if using Django or Flask in backend)
-__pycache__/
-*.py[cod]
-*.sqlite3
-*.db
-*.log
-
-# Virtual environments
-venv/
-env/
-.venv/
-
-# Django static/media
-/staticfiles/
-/media/
-
-# Cache and misc
-*.log
-.cache/
-coverage/
-*.tgz
-
-# Optional: GitHub Codespaces or remote dev tools
-.devcontainer/
+*.swo
