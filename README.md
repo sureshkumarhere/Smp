@@ -1,6 +1,7 @@
 # SMP Chat — Features & Advantages
 
 [![CI Checks](https://github.com/sureshkumarhere/Smp/actions/workflows/ci.yml/badge.svg)](https://github.com/sureshkumarhere/Smp/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/Tests-21%20Passed-brightgreen?logo=jest&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-v20-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5.2-646CFF?logo=vite&logoColor=white)

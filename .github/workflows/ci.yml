@@ -31,6 +31,11 @@ jobs:
           cd backend
           node --check server.js
 
+      - name: Run Backend Unit Tests (Jest)
+        run: |
+          cd backend
+          npm test
+
   frontend:
     name: Frontend Build & Health
     runs-on: ubuntu-latest
@@ -54,6 +59,11 @@ jobs:
         run: |
           cd frontend
           npm run lint
+
+      - name: Run Frontend Unit Tests (Vitest)
+        run: |
+          cd frontend
+          npm test
 
       - name: Build frontend (Bundle Check)
         run: |
