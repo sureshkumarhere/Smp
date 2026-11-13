@@ -9,6 +9,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { CallProvider } from "./context/CallContext";
 
 // Components
 import Header from "./components/Header";
@@ -115,7 +116,9 @@ function App() {
   return (
     <Provider store={store}>
       <GoogleOAuthProvider clientId={googleClientId || "sample-google-client-id"}>
-        <RouterProvider router={routers} />
+        <CallProvider>
+          <RouterProvider router={routers} />
+        </CallProvider>
       </GoogleOAuthProvider>
     </Provider>
   );
