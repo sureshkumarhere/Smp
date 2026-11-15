@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { CiMenuKebab } from "react-icons/ci";
-import { FaArrowLeft, FaCalendarCheck } from "react-icons/fa";
+import { FaArrowLeft, FaCalendarCheck, FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+
+import { useCall } from "../../hooks/useWebRTC";
 
 import {
 	setChatDetailsBox,
@@ -33,6 +35,8 @@ const MessageBox = ({ chatId }) => {
 	const authUserId = useSelector((state) => state?.auth?._id);
 	const accountType = useSelector((state) => state?.auth?.accountType);
 	const onlineUserIds = useSelector((state) => state?.online?.onlineUserIds || []);
+
+	const { initiateCall, callStatus } = useCall();
 
 	// Fetch messages on chat change
 	useEffect(() => {
@@ -125,7 +129,52 @@ return (
 					</div>
 				</div>
 
-				<CiMenuKebab fontSize={18} title="Menu" className="cursor-pointer" />
+				{/* Call Actions & Menu */}
+				<div className="flex items-center gap-1 sm:gap-2">
+					{!selectedChat?.isGroupChat && otherUser && (
+						<>
+							<button
+								type="button"
+								onClick={(e) => {
+									e.stopPropagation();
+									if (callStatus !== "idle") {
+										toast.warn("A call is already in progress");
+										return;
+									}
+									initiateCall({ receiver: otherUser, isVideo: false });
+								}}
+								className="p-2 sm:p-2.5 rounded-full hover:bg-richblack-800 text-richblack-200 hover:text-yellow-400 transition-colors"
+								title="Start Voice Call"
+							>
+								<FaPhoneAlt size={14} />
+							</button>
+							<button
+								type="button"
+								onClick={(e) => {
+									e.stopPropagation();
+									if (callStatus !== "idle") {
+										toast.warn("A call is already in progress");
+										return;
+									}
+									initiateCall({ receiver: otherUser, isVideo: true });
+								}}
+								className="p-2 sm:p-2.5 rounded-full hover:bg-richblack-800 text-richblack-200 hover:text-yellow-400 transition-colors"
+								title="Start Video Call"
+							>
+								<FaVideo size={16} />
+							</button>
+						</>
+					)}
+					<div
+						className="p-2 rounded-full hover:bg-richblack-800 transition-colors"
+						onClick={(e) => {
+							e.stopPropagation();
+							dispatch(setChatDetailsBox(true));
+						}}
+					>
+						<CiMenuKebab fontSize={18} title="Menu" className="cursor-pointer" />
+					</div>
+				</div>
 			</div>
 
 			{/* Chat Details Box */}
