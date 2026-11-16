@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CallContext } from "../context/CallContext";
+import { CallContext, CallProvider } from "../context/CallContext";
 import useWebRTC, { useCall } from "../hooks/useWebRTC";
 import { ICE_SERVERS } from "../utils/webrtcConfig";
 
@@ -11,11 +11,13 @@ describe("WebRTC Configuration & Hook Unit Tests", () => {
 
     const urls = ICE_SERVERS.iceServers.map((s) => s.urls);
     expect(urls).toContain("stun:stun.l.google.com:19302");
+    expect(urls).toContain("stun:stun1.l.google.com:19302");
   });
 
-  test("CallContext should be a valid React Context object", () => {
+  test("CallContext and CallProvider should be valid React objects", () => {
     expect(CallContext).toBeDefined();
     expect(typeof CallContext.Provider).toBe("object");
+    expect(typeof CallProvider).toBe("function");
   });
 
   test("useWebRTC and useCall hooks should be valid exported functions", () => {

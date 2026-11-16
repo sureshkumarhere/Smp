@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { FaCalendarCheck, FaUserCheck, FaUserTimes } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { FaCalendarCheck, FaUserCheck, FaUserTimes, FaVideo } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { canSeePresence, isUserOnline } from "../../utils/presence";
+import { useCall } from "../../hooks/useWebRTC";
+import { setChatDetailsBox } from "../../redux/slices/conditionSlice";
 
 const Attendance = () => {
+  const dispatch = useDispatch();
   const selectedChat = useSelector((store) => store?.myChat?.selectedChat);
   const auth = useSelector((store) => store?.auth);
   const onlineUserIds = useSelector((store) => store?.online?.onlineUserIds || []);
+  const { startGroupCall, isGroupCall, callStatus } = useCall();
   const [meetings, setMeetings] = useState([]);
   const [title, setTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState("");
@@ -135,11 +139,31 @@ const Attendance = () => {
 
       {meetings.map((meeting) => (
         <div key={meeting._id} className="rounded-xl border border-white/10 bg-richblack-800/60 p-4 glass-light">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h4 className="text-lg font-semibold">{meeting.meetingTitle}</h4>
               <p className="text-sm text-richblack-300">{meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString() : "No scheduled time"}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (callStatus !== "idle" || isGroupCall) {
+                  toast.warn("A call is already active");
+                  return;
+                }
+                dispatch(setChatDetailsBox(false));
+                startGroupCall({
+                  roomId: selectedChat._id,
+                  groupName: meeting.meetingTitle || "Scheduled Meeting",
+                  isVideo: true,
+                });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-richblack-900 rounded-lg text-xs font-semibold shadow-md transition"
+              title="Start or Join Meeting Call"
+            >
+              <FaVideo size={12} />
+              <span>Meeting Call</span>
+            </button>
           </div>
 
           <div className="space-y-2">

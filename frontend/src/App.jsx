@@ -19,6 +19,7 @@ import GroupChatBox from "./components/chatComponents/GroupChatBox";
 import Loading from "./components/loading/Loading";
 import CallModal from "./components/call/CallModal";
 import CallOverlay from "./components/call/CallOverlay";
+import GroupCallOverlay from "./components/call/GroupCallOverlay";
 
 // Pages
 import Error from "./pages/Error";
@@ -86,6 +87,7 @@ const AppLayout = () => {
         {isNotificationBox && <NotificationBox />}
         <CallModal />
         <CallOverlay />
+        <GroupCallOverlay />
       </main>
 
       {/* Loading Overlay */}

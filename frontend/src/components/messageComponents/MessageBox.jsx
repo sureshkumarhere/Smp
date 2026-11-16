@@ -36,7 +36,21 @@ const MessageBox = ({ chatId }) => {
 	const accountType = useSelector((state) => state?.auth?.accountType);
 	const onlineUserIds = useSelector((state) => state?.online?.onlineUserIds || []);
 
-	const { initiateCall, callStatus } = useCall();
+	const {
+		initiateCall,
+		callStatus,
+		isGroupCall,
+		activeGroupCalls,
+		startGroupCall,
+		joinGroupCall,
+	} = useCall();
+
+	// Query group call status whenever group chat is opened
+	useEffect(() => {
+		if (selectedChat?.isGroupChat && selectedChat?._id) {
+			socket.emit("group-call:get-status", { roomId: selectedChat._id });
+		}
+	}, [selectedChat?._id, selectedChat?.isGroupChat]);
 
 	// Fetch messages on chat change
 	useEffect(() => {
@@ -137,7 +151,7 @@ return (
 								type="button"
 								onClick={(e) => {
 									e.stopPropagation();
-									if (callStatus !== "idle") {
+									if (callStatus !== "idle" || isGroupCall) {
 										toast.warn("A call is already in progress");
 										return;
 									}
@@ -152,7 +166,7 @@ return (
 								type="button"
 								onClick={(e) => {
 									e.stopPropagation();
-									if (callStatus !== "idle") {
+									if (callStatus !== "idle" || isGroupCall) {
 										toast.warn("A call is already in progress");
 										return;
 									}
@@ -165,6 +179,75 @@ return (
 							</button>
 						</>
 					)}
+
+					{selectedChat?.isGroupChat && (
+						<>
+							{activeGroupCalls?.[selectedChat._id]?.active ? (
+								<button
+									type="button"
+									onClick={(e) => {
+										e.stopPropagation();
+										if (isGroupCall) {
+											toast.warn("You are already in the call");
+											return;
+										}
+										joinGroupCall({
+											roomId: selectedChat._id,
+											groupName: selectedChat.chatName,
+											isVideo: true,
+										});
+									}}
+									className="flex items-center gap-1.5 px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded-full text-xs font-semibold shadow-md animate-pulse transition"
+									title="Join Ongoing Group Call"
+								>
+									<FaVideo size={12} />
+									<span>Join ({activeGroupCalls[selectedChat._id].participantCount})</span>
+								</button>
+							) : (
+								<>
+									<button
+										type="button"
+										onClick={(e) => {
+											e.stopPropagation();
+											if (callStatus !== "idle" || isGroupCall) {
+												toast.warn("A call is already in progress");
+												return;
+											}
+											startGroupCall({
+												roomId: selectedChat._id,
+												groupName: selectedChat.chatName,
+												isVideo: false,
+											});
+										}}
+										className="p-2 sm:p-2.5 rounded-full hover:bg-richblack-800 text-richblack-200 hover:text-yellow-400 transition-colors"
+										title="Start Group Voice Call"
+									>
+										<FaPhoneAlt size={14} />
+									</button>
+									<button
+										type="button"
+										onClick={(e) => {
+											e.stopPropagation();
+											if (callStatus !== "idle" || isGroupCall) {
+												toast.warn("A call is already in progress");
+												return;
+											}
+											startGroupCall({
+												roomId: selectedChat._id,
+												groupName: selectedChat.chatName,
+												isVideo: true,
+											});
+										}}
+										className="p-2 sm:p-2.5 rounded-full hover:bg-richblack-800 text-richblack-200 hover:text-yellow-400 transition-colors"
+										title="Start Group Video Call"
+									>
+										<FaVideo size={16} />
+									</button>
+								</>
+							)}
+						</>
+					)}
+
 					<div
 						className="p-2 rounded-full hover:bg-richblack-800 transition-colors"
 						onClick={(e) => {
@@ -190,6 +273,31 @@ return (
 					>
 						<ChatDetailsBox />
 					</div>
+				</div>
+			)}
+
+			{/* Active Group Call Banner */}
+			{selectedChat?.isGroupChat && activeGroupCalls?.[selectedChat._id]?.active && !isGroupCall && (
+				<div className="shrink-0 flex items-center justify-between px-4 py-2 bg-gradient-to-r from-green-500/20 via-richblack-800/80 to-transparent border-b border-green-500/30 text-green-300 text-xs font-medium">
+					<div className="flex items-center gap-2">
+						<span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping" />
+						<span>
+							Live group call in progress ({activeGroupCalls[selectedChat._id].participantCount} joined)
+						</span>
+					</div>
+					<button
+						type="button"
+						onClick={() =>
+							joinGroupCall({
+								roomId: selectedChat._id,
+								groupName: selectedChat.chatName,
+								isVideo: true,
+							})
+						}
+						className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-semibold shadow transition"
+					>
+						Join Call
+					</button>
 				</div>
 			)}
 

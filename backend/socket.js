@@ -5,6 +5,10 @@ let io = null;
 const onlineUsers = new Set();
 // Track active 1-on-1 calls to handle unexpected disconnections (userId -> peerUserId)
 const activeCalls = new Map();
+// Track active group calls (roomId -> Map(socketId -> { userId, user, isVideo, isMicMuted, isCameraOff }))
+const groupCalls = new Map();
+// Quick mapping of socketId -> roomId for group calls
+const socketToGroupRoom = new Map();
 
 const initSocket = (server, corsOptions) => {
 	io = new Server(server, {
@@ -165,9 +169,144 @@ const initSocket = (server, corsOptions) => {
 		});
 
 		// ==========================================
-		// 4. Socket Disconnect & Cleanup
+		// 4. WebRTC Group & Meeting Call Signaling
+		// ==========================================
+
+		const removeUserFromGroupCall = (userSocket, roomId) => {
+			if (!roomId) return;
+			const rId = roomId.toString();
+			const roomMap = groupCalls.get(rId);
+			if (roomMap && roomMap.has(userSocket.id)) {
+				const participant = roomMap.get(userSocket.id);
+				roomMap.delete(userSocket.id);
+				socketToGroupRoom.delete(userSocket.id);
+				userSocket.leave(`group-call:${rId}`);
+
+				// Notify remaining members in the group call
+				userSocket.to(`group-call:${rId}`).emit("group-call:user-left", {
+					socketId: userSocket.id,
+					userId: participant?.userId || userSocket.userId,
+				});
+
+				// Broadcast active call count to the main chat room
+				const participantCount = roomMap.size;
+				const isActive = participantCount > 0;
+				if (!isActive) {
+					groupCalls.delete(rId);
+				}
+				io.to(rId).emit("group-call:status", {
+					roomId: rId,
+					active: isActive,
+					participantCount,
+				});
+			}
+		};
+
+		socket.on("group-call:join", ({ roomId, user, isVideo }) => {
+			if (!roomId) return;
+			const rId = roomId.toString();
+			socket.join(`group-call:${rId}`);
+
+			if (!groupCalls.has(rId)) {
+				groupCalls.set(rId, new Map());
+			}
+			const roomMap = groupCalls.get(rId);
+
+			// Collect existing participants to send back to the newly joining peer
+			const existingParticipants = [];
+			for (const [existingSocketId, participantData] of roomMap.entries()) {
+				existingParticipants.push({
+					socketId: existingSocketId,
+					user: participantData.user,
+					isVideo: participantData.isVideo,
+					isMicMuted: participantData.isMicMuted,
+					isCameraOff: participantData.isCameraOff,
+				});
+			}
+
+			// Add the new participant
+			roomMap.set(socket.id, {
+				userId: user?._id || socket.userId,
+				user,
+				isVideo: Boolean(isVideo),
+				isMicMuted: false,
+				isCameraOff: !isVideo,
+			});
+			socketToGroupRoom.set(socket.id, rId);
+
+			// Return list of peers already in call so newcomer can initiate peer connections
+			socket.emit("group-call:existing-users", {
+				participants: existingParticipants,
+				roomId: rId,
+			});
+
+			// Notify existing peers
+			socket.to(`group-call:${rId}`).emit("group-call:user-joined", {
+				socketId: socket.id,
+				user,
+				isVideo: Boolean(isVideo),
+			});
+
+			// Broadcast active status to the chat
+			io.to(rId).emit("group-call:status", {
+				roomId: rId,
+				active: true,
+				participantCount: roomMap.size,
+			});
+		});
+
+		// Relay WebRTC mesh signals (offer / answer / candidate)
+		socket.on("group-call:signal", ({ targetSocketId, signal }) => {
+			if (!targetSocketId || !signal) return;
+			socket.to(targetSocketId).emit("group-call:signal", {
+				fromSocketId: socket.id,
+				signal,
+			});
+		});
+
+		// Broadcast media status changes (mute, camera toggle)
+		socket.on("group-call:toggle-media", ({ roomId, isMicMuted, isCameraOff }) => {
+			if (!roomId) return;
+			const rId = roomId.toString();
+			const roomMap = groupCalls.get(rId);
+			if (roomMap && roomMap.has(socket.id)) {
+				const participant = roomMap.get(socket.id);
+				if (typeof isMicMuted === "boolean") participant.isMicMuted = isMicMuted;
+				if (typeof isCameraOff === "boolean") participant.isCameraOff = isCameraOff;
+
+				socket.to(`group-call:${rId}`).emit("group-call:media-changed", {
+					socketId: socket.id,
+					isMicMuted: participant.isMicMuted,
+					isCameraOff: participant.isCameraOff,
+				});
+			}
+		});
+
+		socket.on("group-call:leave", ({ roomId }) => {
+			removeUserFromGroupCall(socket, roomId);
+		});
+
+		socket.on("group-call:get-status", ({ roomId }) => {
+			if (!roomId) return;
+			const rId = roomId.toString();
+			const roomMap = groupCalls.get(rId);
+			socket.emit("group-call:status", {
+				roomId: rId,
+				active: roomMap ? roomMap.size > 0 : false,
+				participantCount: roomMap ? roomMap.size : 0,
+			});
+		});
+
+		// ==========================================
+		// 5. Socket Disconnect & Cleanup
 		// ==========================================
 		socket.on("disconnect", () => {
+			// Clean up group call if user was in one
+			if (socketToGroupRoom.has(socket.id)) {
+				const groupRoomId = socketToGroupRoom.get(socket.id);
+				removeUserFromGroupCall(socket, groupRoomId);
+			}
+
 			const disconnectedUserId = socket.userId;
 
 			if (disconnectedUserId) {
