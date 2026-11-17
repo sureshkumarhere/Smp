@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaCalendarCheck, FaUserCheck, FaUserTimes, FaVideo } from "react-icons/fa";
+import { FaCalendarCheck, FaFileExport, FaUserCheck, FaUserTimes, FaVideo } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { canSeePresence, isUserOnline } from "../../utils/presence";
@@ -95,6 +95,79 @@ const Attendance = () => {
 
   const showPresence = canSeePresence(auth?.accountType);
 
+  const exportClientSideCSV = (meeting) => {
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      return `"${String(val).replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      "Roll No",
+      "Student Name",
+      "Email",
+      "Status",
+      "Marked At",
+      "Meeting Title",
+      "Scheduled At",
+      "Group Name",
+    ];
+
+    const rows = (meeting.records || []).map((r) => [
+      escapeCSV(r.student?.regNo || "N/A"),
+      escapeCSV(getDisplayName(r)),
+      escapeCSV(r.student?.email || "N/A"),
+      escapeCSV(r.status || "pending"),
+      escapeCSV(r.markedAt ? new Date(r.markedAt).toLocaleString() : "Not marked"),
+      escapeCSV(meeting.meetingTitle || "Meeting"),
+      escapeCSV(meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString() : "N/A"),
+      escapeCSV(selectedChat?.chatName || "Group"),
+    ].join(","));
+
+    const csvContent = [headers.join(","), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const sanitizedTitle = (meeting.meetingTitle || "attendance").replace(/[^a-zA-Z0-9_-]/g, "_");
+    a.href = url;
+    a.download = `${sanitizedTitle}_attendance.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Attendance sheet exported to CSV");
+  };
+
+  const handleExportCSV = async (meeting) => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/attendance/export/${meeting._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) {
+        exportClientSideCSV(meeting);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const sanitizedTitle = (meeting.meetingTitle || "attendance").replace(/[^a-zA-Z0-9_-]/g, "_");
+      a.href = url;
+      a.download = `${sanitizedTitle}_attendance.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Attendance sheet exported to CSV");
+    } catch (err) {
+      console.error("Export error, using client-side fallback:", err);
+      exportClientSideCSV(meeting);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {isMentor && (
@@ -139,31 +212,44 @@ const Attendance = () => {
 
       {meetings.map((meeting) => (
         <div key={meeting._id} className="rounded-xl border border-white/10 bg-richblack-800/60 p-4 glass-light">
-          <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h4 className="text-lg font-semibold">{meeting.meetingTitle}</h4>
               <p className="text-sm text-richblack-300">{meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString() : "No scheduled time"}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (callStatus !== "idle" || isGroupCall) {
-                  toast.warn("A call is already active");
-                  return;
-                }
-                dispatch(setChatDetailsBox(false));
-                startGroupCall({
-                  roomId: selectedChat._id,
-                  groupName: meeting.meetingTitle || "Scheduled Meeting",
-                  isVideo: true,
-                });
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-richblack-900 rounded-lg text-xs font-semibold shadow-md transition"
-              title="Start or Join Meeting Call"
-            >
-              <FaVideo size={12} />
-              <span>Meeting Call</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {isMentor && (
+                <button
+                  type="button"
+                  onClick={() => handleExportCSV(meeting)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-richblack-700 hover:bg-richblack-600 text-yellow-400 border border-yellow-400/30 rounded-lg text-xs font-semibold shadow-md transition"
+                  title="Export Attendance Sheet (CSV / Excel)"
+                >
+                  <FaFileExport size={12} />
+                  <span>Export CSV</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (callStatus !== "idle" || isGroupCall) {
+                    toast.warn("A call is already active");
+                    return;
+                  }
+                  dispatch(setChatDetailsBox(false));
+                  startGroupCall({
+                    roomId: selectedChat._id,
+                    groupName: meeting.meetingTitle || "Scheduled Meeting",
+                    isVideo: true,
+                  });
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-richblack-900 rounded-lg text-xs font-semibold shadow-md transition"
+                title="Start or Join Meeting Call"
+              >
+                <FaVideo size={12} />
+                <span>Meeting Call</span>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

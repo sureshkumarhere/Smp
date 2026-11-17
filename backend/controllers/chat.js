@@ -277,6 +277,76 @@ const updateAttendance = async (req, res) => {
 	return res.status(200).json({ data: meeting });
 };
 
+const exportAttendance = async (req, res) => {
+	const { meetingId } = req.params;
+	if (!meetingId) {
+		return res.status(400).json({ message: "Meeting ID is required" });
+	}
+
+	const meeting = await Attendance.findById(meetingId)
+		.populate("records.student", "-password")
+		.populate("createdBy", "-password")
+		.populate("chat");
+
+	if (!meeting) {
+		return res.status(404).json({ message: "Meeting not found" });
+	}
+
+	const chat = meeting.chat;
+	const isMentor =
+		chat?.groupAdmin?.toString() === req.user._id.toString() ||
+		req.user.accountType === "mentor" ||
+		req.user.accountType === "admin";
+
+	if (!isMentor) {
+		return res.status(403).json({ message: "Only mentors or admins can export attendance" });
+	}
+
+	const escapeCSV = (field) => {
+		if (field === null || field === undefined) return '""';
+		const str = String(field).replace(/"/g, '""');
+		return `"${str}"`;
+	};
+
+	const headers = [
+		"Roll No",
+		"Student Name",
+		"Email",
+		"Attendance Status",
+		"Marked At",
+		"Meeting Title",
+		"Scheduled At",
+		"Group Name",
+	];
+
+	const rows = (meeting.records || []).map((record) => {
+		const student = record.student || {};
+		const studentName = `${student.firstName || ""} ${student.lastName || ""}`.trim() || student.email || "Student";
+		const markedAt = record.markedAt ? new Date(record.markedAt).toLocaleString() : "Not marked";
+		const scheduledAt = meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString() : "N/A";
+
+		return [
+			escapeCSV(student.regNo || "N/A"),
+			escapeCSV(studentName),
+			escapeCSV(student.email || "N/A"),
+			escapeCSV(record.status || "pending"),
+			escapeCSV(markedAt),
+			escapeCSV(meeting.meetingTitle || "Meeting"),
+			escapeCSV(scheduledAt),
+			escapeCSV(chat?.chatName || "Group"),
+		].join(",");
+	});
+
+	const csvContent = [headers.join(","), ...rows].join("\r\n");
+
+	const sanitizedTitle = (meeting.meetingTitle || "attendance").replace(/[^a-zA-Z0-9_-]/g, "_");
+	const filename = `${sanitizedTitle}_attendance.csv`;
+
+	res.setHeader("Content-Type", "text/csv; charset=utf-8");
+	res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+	return res.status(200).send(csvContent);
+};
+
 module.exports = {
 	postChat,
 	getChat,
@@ -289,4 +359,5 @@ module.exports = {
 	scheduleMeeting,
 	getMeetings,
 	updateAttendance,
+	exportAttendance,
 };
