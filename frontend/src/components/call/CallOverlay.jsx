@@ -9,6 +9,7 @@ import {
   FaPhoneSlash,
   FaExpand,
   FaCompress,
+  FaChalkboard,
 } from "react-icons/fa";
 
 const formatDuration = (seconds) => {
@@ -32,6 +33,8 @@ const CallOverlay = () => {
     toggleMic,
     toggleCamera,
     toggleScreenShare,
+    isWhiteboardOpen,
+    toggleWhiteboard,
   } = useCall();
 
   const [isMinimized, setIsMinimized] = useState(false);
@@ -285,6 +288,22 @@ const CallOverlay = () => {
               }
             >
               <FaDesktop size={18} />
+            </button>
+          )}
+
+          {/* Collaborative Whiteboard (available once connected) */}
+          {callStatus === "connected" && (
+            <button
+              onClick={toggleWhiteboard}
+              className={`p-3.5 sm:p-4 rounded-full transition-all ${
+                isWhiteboardOpen
+                  ? "bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30"
+                  : "bg-richblack-800 text-white hover:bg-richblack-700"
+              }`}
+              title={isWhiteboardOpen ? "Close Whiteboard" : "Open Whiteboard"}
+              aria-label={isWhiteboardOpen ? "Close Whiteboard" : "Open Whiteboard"}
+            >
+              <FaChalkboard size={18} />
             </button>
           )}
 

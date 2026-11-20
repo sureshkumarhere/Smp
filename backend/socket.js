@@ -1,4 +1,9 @@
 const { Server } = require("socket.io");
+const {
+	WhiteboardStore,
+	normalizeBoardId,
+	sanitizeStroke,
+} = require("./utils/whiteboard");
 
 let io = null;
 // Track online user ids
@@ -9,6 +14,15 @@ const activeCalls = new Map();
 const groupCalls = new Map();
 // Quick mapping of socketId -> roomId for group calls
 const socketToGroupRoom = new Map();
+// Shared whiteboard state, keyed by call/meeting room id
+const whiteboards = new WhiteboardStore();
+// Quick mapping of socketId -> whiteboard Socket.IO room name
+const socketToWhiteboardRoom = new Map();
+
+const whiteboardRoomName = (roomId) => {
+	const boardId = normalizeBoardId(roomId);
+	return boardId ? `whiteboard:${boardId}` : null;
+};
 
 const initSocket = (server, corsOptions) => {
 	io = new Server(server, {
@@ -193,6 +207,8 @@ const initSocket = (server, corsOptions) => {
 				const isActive = participantCount > 0;
 				if (!isActive) {
 					groupCalls.delete(rId);
+					// The meeting is over, so its shared canvas can be discarded.
+					whiteboards.deleteBoard(`meeting:${rId}`);
 				}
 				io.to(rId).emit("group-call:status", {
 					roomId: rId,
@@ -298,9 +314,97 @@ const initSocket = (server, corsOptions) => {
 		});
 
 		// ==========================================
+		// 4b. Collaborative Whiteboard (Call Canvas)
+		// ==========================================
+
+		const leaveWhiteboard = (peerSocket) => {
+			const room = socketToWhiteboardRoom.get(peerSocket.id);
+			if (!room) return;
+
+			peerSocket.leave(room);
+			socketToWhiteboardRoom.delete(peerSocket.id);
+			// Keep the board: closing the panel should not erase the meeting's work.
+		};
+
+		// Only sockets that explicitly joined a board may draw on it.
+		const getActiveWhiteboardRoom = (roomId) => {
+			const room = whiteboardRoomName(roomId);
+			return room && socketToWhiteboardRoom.get(socket.id) === room ? room : null;
+		};
+
+		socket.on("whiteboard:join", ({ roomId } = {}) => {
+			const room = whiteboardRoomName(roomId);
+			if (!room) return;
+
+			const previousRoom = socketToWhiteboardRoom.get(socket.id);
+			if (previousRoom && previousRoom !== room) leaveWhiteboard(socket);
+
+			socket.join(room);
+			socketToWhiteboardRoom.set(socket.id, room);
+
+			const boardId = room.slice("whiteboard:".length);
+			socket.emit("whiteboard:init", {
+				roomId: boardId,
+				strokes: whiteboards.getStrokes(boardId),
+			});
+		});
+
+		// In-progress strokes are relayed to peers so drawing appears live.
+		socket.on("whiteboard:preview", ({ roomId, stroke } = {}) => {
+			const room = getActiveWhiteboardRoom(roomId);
+			if (!room) return;
+
+			const preview = sanitizeStroke(stroke, socket.userId);
+			if (!preview) return;
+
+			socket.to(room).emit("whiteboard:preview", {
+				roomId: room.slice("whiteboard:".length),
+				stroke: preview,
+				socketId: socket.id,
+			});
+		});
+
+		socket.on("whiteboard:stroke", ({ roomId, stroke } = {}) => {
+			const room = getActiveWhiteboardRoom(roomId);
+			if (!room) return;
+
+			const boardId = room.slice("whiteboard:".length);
+			const saved = whiteboards.addStroke(boardId, stroke, socket.userId);
+			if (!saved) return;
+
+			// Exclude the sender: it already committed the stroke locally.
+			socket.to(room).emit("whiteboard:stroke", { roomId: boardId, stroke: saved });
+		});
+
+		socket.on("whiteboard:undo", ({ roomId, strokeId } = {}) => {
+			const room = getActiveWhiteboardRoom(roomId);
+			if (!room) return;
+
+			const boardId = room.slice("whiteboard:".length);
+			const removed = whiteboards.undoStroke(boardId, strokeId, socket.userId);
+			if (!removed) return;
+
+			socket.to(room).emit("whiteboard:undo", { roomId: boardId, strokeId: removed.id });
+		});
+
+		socket.on("whiteboard:clear", ({ roomId } = {}) => {
+			const room = getActiveWhiteboardRoom(roomId);
+			if (!room) return;
+
+			const boardId = room.slice("whiteboard:".length);
+			whiteboards.clearBoard(boardId);
+			socket.to(room).emit("whiteboard:clear", { roomId: boardId });
+		});
+
+		socket.on("whiteboard:leave", () => leaveWhiteboard(socket));
+
+		// ==========================================
 		// 5. Socket Disconnect & Cleanup
 		// ==========================================
 		socket.on("disconnect", () => {
+			// Leave the whiteboard before the socket leaves all rooms
+			leaveWhiteboard(socket);
+
 			// Clean up group call if user was in one
 			if (socketToGroupRoom.has(socket.id)) {
 				const groupRoomId = socketToGroupRoom.get(socket.id);

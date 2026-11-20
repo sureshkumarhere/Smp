@@ -14,12 +14,16 @@ Daily development milestones for SMP Hub (Collaborative Chat, WebRTC Calling & A
     - Backend: `GET /api/chat/attendance/export/:meetingId` with mentor authorization & CSV headers.
     - Frontend: `Attendance.jsx` export handler with automatic fallback for offline reliability.
 
-- [ ] **Step 2: In-Meeting Interactive Whiteboard / Canvas** *(Scheduled: Next)*
+- [x] **Step 2: In-Meeting Interactive Whiteboard / Canvas** *(Completed)*
   - Real-time collaborative whiteboard during audio/video calls.
-  - Freehand drawing, shapes, color picker, eraser, undo, and clear board.
-  - Socket.IO live canvas stream syncing between mentor and participating students.
+  - Freehand drawing, shapes (line / rectangle / circle), color picker, stroke size, eraser, undo, and clear board.
+  - Socket.IO live stroke previews and committed strokes synced between mentor and participating students.
+  - Shared board per meeting / direct call with late-join replay and bounded in-memory history.
+  - Entry points: whiteboard button in both the 1-on-1 and group call overlays.
+  - Backend: `whiteboard:join`, `whiteboard:preview`, `whiteboard:stroke`, `whiteboard:undo`, `whiteboard:clear`, `whiteboard:leave` events in `backend/socket.js`.
+  - Frontend: `components/call/Whiteboard.jsx`, `utils/whiteboard.js`, whiteboard state in `context/CallContext.jsx`.
 
-- [ ] **Step 3: Call History & Missed Call Alerts**
+- [ ] **Step 3: Call History & Missed Call Alerts** *(Scheduled: Next)*
   - Persistent call activity logs inside direct and group chat threads.
   - Inline event messages: `"Voice call ended • 12m 45s"`, `"Missed video call"`, `"Group meeting started"`.
   - Database schema & Socket.IO broadcast integration.

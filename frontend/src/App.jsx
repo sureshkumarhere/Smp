@@ -20,6 +20,7 @@ import Loading from "./components/loading/Loading";
 import CallModal from "./components/call/CallModal";
 import CallOverlay from "./components/call/CallOverlay";
 import GroupCallOverlay from "./components/call/GroupCallOverlay";
+import Whiteboard from "./components/call/Whiteboard";
 
 // Pages
 import Error from "./pages/Error";
@@ -88,6 +89,7 @@ const AppLayout = () => {
         <CallModal />
         <CallOverlay />
         <GroupCallOverlay />
+        <Whiteboard />
       </main>
 
       {/* Loading Overlay */}

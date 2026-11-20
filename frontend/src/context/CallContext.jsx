@@ -40,6 +40,9 @@ export const CallProvider = ({ children }) => {
   const [groupParticipants, setGroupParticipants] = useState([]); // [{ socketId, user, stream, isMicMuted, isCameraOff }]
   const [activeGroupCalls, setActiveGroupCalls] = useState({}); // { [roomId]: { active: boolean, participantCount: number } }
 
+  // Collaborative whiteboard (only available while a call is active)
+  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
+
   // ==========================================
   // Internal Refs
   // ==========================================
@@ -71,6 +74,27 @@ export const CallProvider = ({ children }) => {
   useEffect(() => {
     groupCallRoomRef.current = groupCallRoom;
   }, [groupCallRoom]);
+
+  // Stable board id per conversation: meeting rooms for groups, sorted ids for 1-on-1.
+  const whiteboardRoomId = (() => {
+    if (isGroupCall && groupCallRoom?.roomId) {
+      return `meeting:${groupCallRoom.roomId}`;
+    }
+    if (callStatus === "connected" && currentUser?._id && remoteUser?._id) {
+      return `direct:${[currentUser._id.toString(), remoteUser._id.toString()].sort().join("_")}`;
+    }
+    return null;
+  })();
+
+  const toggleWhiteboard = useCallback(() => {
+    if (!whiteboardRoomId) {
+      toast.warn("Join or start a call to use the whiteboard");
+      return;
+    }
+    setIsWhiteboardOpen((open) => !open);
+  }, [whiteboardRoomId]);
+
+  const closeWhiteboard = useCallback(() => setIsWhiteboardOpen(false), []);
 
   // Ringtone playback controls
   const playRingtone = useCallback(() => {
@@ -180,6 +204,7 @@ export const CallProvider = ({ children }) => {
     setIsMicMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
+    setIsWhiteboardOpen(false);
   }, [stopRingtone, stopTimer]);
 
   // Setup 1-on-1 PeerConnection
@@ -378,6 +403,7 @@ export const CallProvider = ({ children }) => {
     setIsMicMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
+    setIsWhiteboardOpen(false);
   }, [stopTimer]);
 
   const createGroupPeerConnection = useCallback((targetSocketId, localMediaStream) => {
@@ -928,6 +954,12 @@ export const CallProvider = ({ children }) => {
     startGroupCall,
     joinGroupCall,
     leaveGroupCall,
+
+    // Collaborative whiteboard
+    isWhiteboardOpen,
+    whiteboardRoomId,
+    toggleWhiteboard,
+    closeWhiteboard,
   };
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
